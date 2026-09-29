@@ -1,0 +1,13 @@
+-- Zaehlung/Fortschritt eines Blocks (siehe blockRunnerUtils.computeUnits) gruppierte bislang
+-- ausschliesslich nach exercise_id. Taucht dieselbe Uebung mehrfach in verschiedenen Paaren
+-- desselben Blocks auf (z.B. "Tuerziehen" in mehreren Supersatz-Paaren), wurden geloggte Saetze
+-- eines Paares faelschlich als Fortschritt eines anderen Paares gezaehlt -- ein Paar konnte so
+-- als "fertig" gelten, bevor es ueberhaupt begonnen wurde.
+--
+-- plan_block_exercise_id identifiziert den konkreten Eintrag (das "Slot") innerhalb des
+-- eingefrorenen day_snapshot, unabhaengig von der (moeglicherweise wiederholten) exercise_id.
+-- Bewusst ohne Foreign Key auf plan_block_exercises: der day_snapshot ist zum Zeitpunkt des
+-- Session-Starts eingefroren, spaetere Aenderungen/Loeschungen am Plan duerfen historische
+-- Saetze nicht kaskadierend veraendern. Bestehende Zeilen bleiben NULL und fallen im Frontend
+-- auf das alte (exercise_id-basierte) Verhalten zurueck.
+ALTER TABLE logged_sets ADD COLUMN plan_block_exercise_id INTEGER;

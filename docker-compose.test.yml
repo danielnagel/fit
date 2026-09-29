@@ -1,0 +1,50 @@
+name: fit-test
+
+services:
+  fit-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fit_test
+      POSTGRES_USER: fit_test
+      POSTGRES_PASSWORD: fit_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fit_test -d fit_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  fit-backend:
+    build: ./backend
+    depends_on:
+      fit-db:
+        condition: service_healthy
+    environment:
+      PGHOST: fit-db
+      PGPORT: 5432
+      PGUSER: fit_test
+      PGPASSWORD: fit_test
+      PGDATABASE: fit_test
+      PORT: 3000
+    ports:
+      - "3001:3000"
+    networks:
+      - internal
+
+  fit-frontend:
+    build: ./frontend
+    depends_on:
+      - fit-backend
+    ports:
+      - "8081:80"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge

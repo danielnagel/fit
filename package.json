@@ -1,0 +1,24 @@
+{
+  "name": "fit",
+  "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "e2e"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "npm run test --workspace=backend && npm run test --workspace=frontend",
+    "test:e2e": "npm run test --workspace=e2e",
+    "deps:check": "ncu --workspaces --root",
+    "deps:update": "ncu --workspaces --root -u && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4",
+    "npm-check-updates": "^23.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
+}

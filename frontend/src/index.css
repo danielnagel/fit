@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-canvas: #030304;
+  --color-surface: #101114;
+  --color-surface-2: #17191f;
+  --color-surface-3: #1f222a;
+  --color-edge: #2a2e37;
+  --color-fg: #f4f6f9;
+  --color-fg-muted: #8a93a3;
+  --color-accent: #7dd3fc;
+  --color-accent-strong: #38bdf8;
+  --color-danger: #f87171;
+  --color-danger-strong: #ef4444;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-canvas text-fg antialiased;
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  h1 {
+    @apply text-xl font-semibold tracking-tight text-fg;
+  }
+
+  h2 {
+    @apply text-base font-semibold tracking-tight text-fg;
+  }
+
+  h3 {
+    @apply text-sm font-semibold tracking-tight text-fg;
+  }
+
+  dialog {
+    margin: auto;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-edge bg-surface-2 px-3.5 py-2 text-sm font-medium text-fg transition-colors duration-150 hover:border-accent/50 hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-accent bg-accent px-3.5 py-2 text-sm font-semibold text-black transition-colors duration-150 hover:border-accent-strong hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .btn-danger {
+    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-danger/40 bg-transparent px-3.5 py-2 text-sm font-medium text-danger transition-colors duration-150 hover:border-danger hover:bg-danger hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .field {
+    @apply rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-fg placeholder:text-fg-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40;
+  }
+
+  .card {
+    @apply rounded-2xl border border-edge bg-surface p-5 shadow-lg shadow-black/30;
+  }
+
+  .panel-accent {
+    @apply rounded-2xl border border-accent/40 bg-surface-2 p-4 shadow-lg shadow-accent/5;
+  }
+
+  .hint {
+    @apply text-sm text-fg-muted;
+  }
+}

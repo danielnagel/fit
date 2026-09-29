@@ -1,0 +1,60 @@
+services:
+  fit-db:
+    image: postgres:16-alpine
+    container_name: fit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432" # fuer den lokalen Dev-Modus (npm run dev), in dem Backend/Frontend ausserhalb von Docker laufen
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  fit-backend:
+    build: ./backend
+    container_name: fit-backend
+    restart: unless-stopped
+    depends_on:
+      fit-db:
+        condition: service_healthy
+    environment:
+      PGHOST: fit-db
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/src:/home/node/app/src
+      - ./backend/db:/home/node/app/db
+    networks:
+      - internal
+
+  fit-frontend:
+    build: ./frontend
+    container_name: fit-frontend
+    restart: unless-stopped
+    depends_on:
+      - fit-backend
+    ports:
+      - "8080:80"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  db_data:
