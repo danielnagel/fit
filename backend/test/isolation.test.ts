@@ -1,32 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
-import { createExercise, createPlan, createTrainingMethod, startWeek, loginAgent, type Agent } from './fixtures.js';
+import { createExercise, createFullData, createPlan, createTrainingMethod, loginAgent, type Agent } from './fixtures.js';
 
 const app = createApp();
 let alice: Agent;
 let bob: Agent;
 
-async function setupFullData(agent: Agent) {
-  const method = await createTrainingMethod(agent);
-  const exercise = await createExercise(agent, { name: 'Kniebeuge' });
-  const plan = await createPlan(agent, {
-    days: [{ name: 'Tag 1', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
-  });
-  const week = await startWeek(agent, plan.id);
-  const planDayId = plan.days[0].id;
-  const session = (await agent.post('/api/sessions').send({ plan_day_id: planDayId })).body;
-  const loggedSet = (
-    await agent.post(`/api/sessions/${session.id}/logged-sets`).send({ exercise_id: exercise.id, unit_index: 0, reps: 8 })
-  ).body;
-  return { method, exercise, plan, week, planDayId, session, loggedSet };
-}
-
-let data: Awaited<ReturnType<typeof setupFullData>>;
+let data: Awaited<ReturnType<typeof createFullData>>;
 
 beforeEach(async () => {
   alice = await loginAgent(app);
   bob = await loginAgent(app);
-  data = await setupFullData(alice);
+  data = await createFullData(alice);
 });
 
 describe('lists only contain own data', () => {
@@ -138,7 +123,7 @@ describe('references to foreign data are rejected', () => {
   });
 
   it('an own session cannot log sets or finish exercises with a foreign exercise', async () => {
-    const own = await setupFullData(bob);
+    const own = await createFullData(bob);
 
     const logged = await bob
       .post(`/api/sessions/${own.session.id}/logged-sets`)

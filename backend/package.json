@@ -7,7 +7,12 @@
     "dev": "tsx watch src/index.ts",
     "pretest": "docker compose -f ../docker-compose.test.yml up -d --wait fit-db",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "user:create": "tsx src/cli/user.ts create",
+    "user:list": "tsx src/cli/user.ts list",
+    "user:set-password": "tsx src/cli/user.ts set-password",
+    "user:delete": "tsx src/cli/user.ts delete",
+    "user:assign-data": "tsx src/cli/user.ts assign-data"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",

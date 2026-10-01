@@ -79,3 +79,19 @@ export async function startWeek(agent: Agent, planId: number) {
 export async function endWeek(agent: Agent, weekId: number) {
   return agent.patch(`/api/plan-weeks/${weekId}`);
 }
+
+// Komplettes Datenset eines Benutzers: Methode, Uebung, Plan mit Tag, aktive Woche, Session mit einem Satz.
+export async function createFullData(agent: Agent) {
+  const method = await createTrainingMethod(agent);
+  const exercise = await createExercise(agent, { name: 'Kniebeuge' });
+  const plan = await createPlan(agent, {
+    days: [{ name: 'Tag 1', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
+  });
+  const week = await startWeek(agent, plan.id);
+  const planDayId = plan.days[0].id;
+  const session = (await agent.post('/api/sessions').send({ plan_day_id: planDayId })).body;
+  const loggedSet = (
+    await agent.post(`/api/sessions/${session.id}/logged-sets`).send({ exercise_id: exercise.id, unit_index: 0, reps: 8 })
+  ).body;
+  return { method, exercise, plan, week, planDayId, session, loggedSet };
+}
