@@ -257,7 +257,7 @@ plansRouter.post('/', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const planResult = await client.query<{ id: number }>('INSERT INTO plans (name) VALUES ($1) RETURNING id', [
+    const planResult = await client.query<{ id: number }>('INSERT INTO plans (user_id, name) VALUES (1, $1) RETURNING id', [
       plan.name!.trim(),
     ]);
     const planId = planResult.rows[0].id;

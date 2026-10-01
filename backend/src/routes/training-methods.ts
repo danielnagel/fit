@@ -132,9 +132,9 @@ trainingMethodsRouter.post('/', async (req, res) => {
   const m = normalize(input);
   const result = await pool.query(
     `INSERT INTO training_methods
-       (name, scope, timing_family, window_seconds, work_seconds, rest_seconds, rest_formula, rest_factor,
+       (user_id, name, scope, timing_family, window_seconds, work_seconds, rest_seconds, rest_formula, rest_factor,
         stop_condition, rounds, total_duration_seconds)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING ${COLUMNS}`,
     [
       m.name,

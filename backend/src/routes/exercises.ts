@@ -31,7 +31,7 @@ exercisesRouter.post('/', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'INSERT INTO exercises (name, description, is_unilateral) VALUES ($1, $2, $3) RETURNING id, name, description, is_unilateral, created_at',
+      'INSERT INTO exercises (user_id, name, description, is_unilateral) VALUES (1, $1, $2, $3) RETURNING id, name, description, is_unilateral, created_at',
       [name.trim(), description || null, Boolean(is_unilateral)],
     );
     res.status(201).json(result.rows[0]);

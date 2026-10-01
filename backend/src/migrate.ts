@@ -6,7 +6,8 @@ import type { Pool } from 'pg';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');
 
-export async function runMigrations(pool: Pool) {
+// upTo (inklusive, Dateiname) nur fuer Tests: Schema bis zu einem Zwischenstand migrieren.
+export async function runMigrations(pool: Pool, options: { upTo?: string } = {}) {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       filename TEXT PRIMARY KEY,
@@ -19,6 +20,7 @@ export async function runMigrations(pool: Pool) {
   const applied = new Set(rows.map((r) => r.filename));
 
   for (const file of files) {
+    if (options.upTo && file > options.upTo) break;
     if (applied.has(file)) continue;
 
     const sql = await readFile(path.join(migrationsDir, file), 'utf8');

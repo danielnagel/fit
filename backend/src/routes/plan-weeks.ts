@@ -40,7 +40,7 @@ planWeeksRouter.post('/', async (req, res) => {
     );
     const weekNumber = weekNumberResult.rows[0].next;
 
-    await pool.query('INSERT INTO plan_weeks (plan_id, week_number) VALUES ($1, $2)', [planId, weekNumber]);
+    await pool.query('INSERT INTO plan_weeks (user_id, plan_id, week_number) VALUES (1, $1, $2)', [planId, weekNumber]);
     res.status(201).json(await loadActiveWeek());
   } catch (err) {
     if ((err as { code?: string }).code === '23505') {
