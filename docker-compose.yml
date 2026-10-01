@@ -33,6 +33,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB}
       PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET in .env setzen}
     ports:
       - "3000:3000"
     volumes:

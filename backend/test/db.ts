@@ -16,4 +16,7 @@ const APP_TABLES = [
 
 export async function resetDb() {
   await pool.query(`TRUNCATE ${APP_TABLES.join(', ')} RESTART IDENTITY CASCADE`);
+  // Default-User (id=1, aus Migration 0001) bleibt bestehen, alle per Test angelegten User verschwinden.
+  await pool.query('DELETE FROM users WHERE id <> 1');
+  await pool.query('ALTER SEQUENCE users_id_seq RESTART WITH 2');
 }

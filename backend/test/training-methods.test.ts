@@ -1,23 +1,27 @@
-import { describe, expect, it } from 'vitest';
-import request from 'supertest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
-import { createPlan, createExercise, createTrainingMethod } from './fixtures.js';
+import { createPlan, createExercise, createTrainingMethod, loginAgent, type Agent } from './fixtures.js';
 
 const app = createApp();
+let agent: Agent;
+
+beforeEach(async () => {
+  agent = await loginAgent(app);
+});
 
 describe('GET /api/training-methods', () => {
   it('lists methods sorted by name', async () => {
-    await createTrainingMethod(app, { name: 'Zeta' });
-    await createTrainingMethod(app, { name: 'Alpha' });
+    await createTrainingMethod(agent, { name: 'Zeta' });
+    await createTrainingMethod(agent, { name: 'Alpha' });
 
-    const res = await request(app).get('/api/training-methods');
+    const res = await agent.get('/api/training-methods');
 
     expect(res.status).toBe(200);
     expect(res.body.map((m: { name: string }) => m.name)).toEqual(['Alpha', 'Zeta']);
   });
 
   it('returns 404 for an unknown id', async () => {
-    const res = await request(app).get('/api/training-methods/999999');
+    const res = await agent.get('/api/training-methods/999999');
     expect(res.status).toBe(404);
   });
 });
@@ -26,26 +30,26 @@ describe('POST /api/training-methods validation', () => {
   const base = { name: 'Test', scope: 'single', stop_condition: 'fixed-count', rounds: 3 };
 
   it('rejects a missing name', async () => {
-    const res = await request(app)
+    const res = await agent
       .post('/api/training-methods')
       .send({ ...base, name: '', timing_family: 'fixed-window-remainder', window_seconds: 60 });
     expect(res.status).toBe(400);
   });
 
   it('rejects an invalid scope', async () => {
-    const res = await request(app)
+    const res = await agent
       .post('/api/training-methods')
       .send({ ...base, scope: 'nope', timing_family: 'fixed-window-remainder', window_seconds: 60 });
     expect(res.status).toBe(400);
   });
 
   it('rejects an invalid timing_family', async () => {
-    const res = await request(app).post('/api/training-methods').send({ ...base, timing_family: 'nope' });
+    const res = await agent.post('/api/training-methods').send({ ...base, timing_family: 'nope' });
     expect(res.status).toBe(400);
   });
 
   it('requires window_seconds for fixed-window-remainder', async () => {
-    const res = await request(app)
+    const res = await agent
       .post('/api/training-methods')
       .send({ ...base, timing_family: 'fixed-window-remainder' });
     expect(res.status).toBe(400);
@@ -53,11 +57,11 @@ describe('POST /api/training-methods validation', () => {
   });
 
   it('requires work_seconds and rest_seconds for fixed-work-rest', async () => {
-    const res = await request(app).post('/api/training-methods').send({ ...base, timing_family: 'fixed-work-rest' });
+    const res = await agent.post('/api/training-methods').send({ ...base, timing_family: 'fixed-work-rest' });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/work_seconds/);
 
-    const res2 = await request(app)
+    const res2 = await agent
       .post('/api/training-methods')
       .send({ ...base, timing_family: 'fixed-work-rest', work_seconds: 20 });
     expect(res2.status).toBe(400);
@@ -65,17 +69,17 @@ describe('POST /api/training-methods validation', () => {
   });
 
   it('requires rest_formula for self-paced, plus rest_factor/rest_seconds depending on formula', async () => {
-    const noFormula = await request(app).post('/api/training-methods').send({ ...base, timing_family: 'self-paced' });
+    const noFormula = await agent.post('/api/training-methods').send({ ...base, timing_family: 'self-paced' });
     expect(noFormula.status).toBe(400);
     expect(noFormula.body.message).toMatch(/rest_formula/);
 
-    const proportionalNoFactor = await request(app)
+    const proportionalNoFactor = await agent
       .post('/api/training-methods')
       .send({ ...base, timing_family: 'self-paced', rest_formula: 'proportional' });
     expect(proportionalNoFactor.status).toBe(400);
     expect(proportionalNoFactor.body.message).toMatch(/rest_factor/);
 
-    const fixedNoSeconds = await request(app)
+    const fixedNoSeconds = await agent
       .post('/api/training-methods')
       .send({ ...base, timing_family: 'self-paced', rest_formula: 'fixed' });
     expect(fixedNoSeconds.status).toBe(400);
@@ -83,7 +87,7 @@ describe('POST /api/training-methods validation', () => {
   });
 
   it('requires rounds for stop_condition fixed-count and total_duration_seconds for time-budget', async () => {
-    const noRounds = await request(app)
+    const noRounds = await agent
       .post('/api/training-methods')
       .send({
         name: 'Test',
@@ -95,7 +99,7 @@ describe('POST /api/training-methods validation', () => {
     expect(noRounds.status).toBe(400);
     expect(noRounds.body.message).toMatch(/rounds/);
 
-    const noBudget = await request(app)
+    const noBudget = await agent
       .post('/api/training-methods')
       .send({
         name: 'Test',
@@ -111,7 +115,7 @@ describe('POST /api/training-methods validation', () => {
 
 describe('POST /api/training-methods normalization', () => {
   it('nulls out fields irrelevant to the chosen timing_family/stop_condition', async () => {
-    const res = await request(app).post('/api/training-methods').send({
+    const res = await agent.post('/api/training-methods').send({
       name: 'Fenster-Methode',
       scope: 'single',
       timing_family: 'fixed-window-remainder',
@@ -134,9 +138,9 @@ describe('POST /api/training-methods normalization', () => {
 
 describe('PUT /api/training-methods/:id', () => {
   it('updates a method', async () => {
-    const method = await createTrainingMethod(app, { name: 'Alt' });
+    const method = await createTrainingMethod(agent, { name: 'Alt' });
 
-    const res = await request(app)
+    const res = await agent
       .put(`/api/training-methods/${method.id}`)
       .send({
         name: 'Neu',
@@ -152,7 +156,7 @@ describe('PUT /api/training-methods/:id', () => {
   });
 
   it('returns 404 for an unknown id', async () => {
-    const res = await request(app)
+    const res = await agent
       .put('/api/training-methods/999999')
       .send({
         name: 'Neu',
@@ -168,20 +172,20 @@ describe('PUT /api/training-methods/:id', () => {
 
 describe('DELETE /api/training-methods/:id', () => {
   it('deletes an unused method', async () => {
-    const method = await createTrainingMethod(app);
-    const res = await request(app).delete(`/api/training-methods/${method.id}`);
+    const method = await createTrainingMethod(agent);
+    const res = await agent.delete(`/api/training-methods/${method.id}`);
     expect(res.status).toBe(204);
   });
 
   it('returns 404 for an unknown id', async () => {
-    const res = await request(app).delete('/api/training-methods/999999');
+    const res = await agent.delete('/api/training-methods/999999');
     expect(res.status).toBe(404);
   });
 
   it('refuses to delete a method still used in a plan', async () => {
-    const method = await createTrainingMethod(app);
-    const exercise = await createExercise(app);
-    await createPlan(app, {
+    const method = await createTrainingMethod(agent);
+    const exercise = await createExercise(agent);
+    await createPlan(agent, {
       days: [
         {
           name: 'Tag 1',
@@ -190,7 +194,7 @@ describe('DELETE /api/training-methods/:id', () => {
       ],
     });
 
-    const res = await request(app).delete(`/api/training-methods/${method.id}`);
+    const res = await agent.delete(`/api/training-methods/${method.id}`);
 
     expect(res.status).toBe(409);
   });

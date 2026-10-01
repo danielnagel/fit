@@ -1,5 +1,13 @@
 import request from 'supertest';
 import type { Express } from 'express';
+import { pool } from '../src/db.js';
+import { hashPassword } from '../src/auth/password.js';
+
+export type Agent = request.Agent;
+
+export const TEST_PASSWORD = 'test-password';
+// scrypt ist absichtlich langsam; der Hash wird einmal pro Testlauf berechnet und wiederverwendet.
+const testPasswordHash = hashPassword(TEST_PASSWORD);
 
 let counter = 0;
 function unique(prefix: string) {
@@ -7,11 +15,28 @@ function unique(prefix: string) {
   return `${prefix} ${counter}`;
 }
 
+export async function createUser(username = unique('user').replace(' ', '-')) {
+  const { rows } = await pool.query<{ id: number; username: string }>(
+    'INSERT INTO users (name, username, password_hash) VALUES ($1, $1, $2) RETURNING id, username',
+    [username, await testPasswordHash],
+  );
+  return rows[0];
+}
+
+// Liefert einen supertest-Agent, der das Login-Cookie traegt; ohne username wird ein neuer User angelegt.
+export async function loginAgent(app: Express, username?: string): Promise<Agent> {
+  const user = username ?? (await createUser()).username;
+  const agent = request.agent(app);
+  const res = await agent.post('/api/auth/login').send({ username: user, password: TEST_PASSWORD });
+  if (res.status !== 200) throw new Error(`Test-Login fehlgeschlagen: ${JSON.stringify(res.body)}`);
+  return agent;
+}
+
 export async function createExercise(
-  app: Express,
+  agent: Agent,
   overrides: { name?: string; description?: string | null; is_unilateral?: boolean } = {},
 ) {
-  const res = await request(app)
+  const res = await agent
     .post('/api/exercises')
     .send({
       name: overrides.name ?? unique('Übung'),
@@ -21,7 +46,7 @@ export async function createExercise(
   return res.body;
 }
 
-export async function createTrainingMethod(app: Express, overrides: Record<string, unknown> = {}) {
+export async function createTrainingMethod(agent: Agent, overrides: Record<string, unknown> = {}) {
   const base = {
     name: unique('Methode'),
     scope: 'single',
@@ -30,27 +55,27 @@ export async function createTrainingMethod(app: Express, overrides: Record<strin
     stop_condition: 'fixed-count',
     rounds: 3,
   };
-  const res = await request(app)
+  const res = await agent
     .post('/api/training-methods')
     .send({ ...base, ...overrides });
   return res.body;
 }
 
 export async function createPlan(
-  app: Express,
+  agent: Agent,
   overrides: { name?: string; days?: unknown[] } = {},
 ) {
-  const res = await request(app)
+  const res = await agent
     .post('/api/plans')
     .send({ name: overrides.name ?? unique('Plan'), days: overrides.days ?? [] });
   return res.body;
 }
 
-export async function startWeek(app: Express, planId: number) {
-  const res = await request(app).post('/api/plan-weeks').send({ plan_id: planId });
+export async function startWeek(agent: Agent, planId: number) {
+  const res = await agent.post('/api/plan-weeks').send({ plan_id: planId });
   return res.body;
 }
 
-export async function endWeek(app: Express, weekId: number) {
-  return request(app).patch(`/api/plan-weeks/${weekId}`);
+export async function endWeek(agent: Agent, weekId: number) {
+  return agent.patch(`/api/plan-weeks/${weekId}`);
 }

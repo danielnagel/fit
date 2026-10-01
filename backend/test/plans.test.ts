@@ -1,12 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import request from 'supertest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
-import { createExercise, createPlan, createTrainingMethod } from './fixtures.js';
+import { createExercise, createPlan, createTrainingMethod, loginAgent, type Agent } from './fixtures.js';
 
 const app = createApp();
+let agent: Agent;
+
+beforeEach(async () => {
+  agent = await loginAgent(app);
+});
 
 async function singleScopeMethod() {
-  return createTrainingMethod(app, {
+  return createTrainingMethod(agent, {
     scope: 'single',
     timing_family: 'fixed-window-remainder',
     window_seconds: 60,
@@ -16,7 +20,7 @@ async function singleScopeMethod() {
 }
 
 async function pairScopeMethod() {
-  return createTrainingMethod(app, {
+  return createTrainingMethod(agent, {
     scope: 'pair',
     timing_family: 'fixed-window-remainder',
     window_seconds: 60,
@@ -26,7 +30,7 @@ async function pairScopeMethod() {
 }
 
 async function selfPacedMethod() {
-  return createTrainingMethod(app, {
+  return createTrainingMethod(agent, {
     scope: 'single',
     timing_family: 'self-paced',
     rest_formula: 'proportional',
@@ -37,7 +41,7 @@ async function selfPacedMethod() {
 }
 
 async function circuitMethod() {
-  return createTrainingMethod(app, {
+  return createTrainingMethod(agent, {
     scope: 'all',
     timing_family: 'self-paced',
     rest_formula: 'proportional',
@@ -48,7 +52,7 @@ async function circuitMethod() {
 }
 
 async function fixedWorkRestMethod() {
-  return createTrainingMethod(app, {
+  return createTrainingMethod(agent, {
     scope: 'single',
     timing_family: 'fixed-work-rest',
     work_seconds: 20,
@@ -60,15 +64,15 @@ async function fixedWorkRestMethod() {
 
 describe('POST /api/plans validation', () => {
   it('rejects a missing name', async () => {
-    const res = await request(app).post('/api/plans').send({ days: [] });
+    const res = await agent.post('/api/plans').send({ days: [] });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/name/);
   });
 
   it('rejects a day without a name', async () => {
     const method = await singleScopeMethod();
-    const exercise = await createExercise(app);
-    const res = await request(app)
+    const exercise = await createExercise(agent);
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Plan',
@@ -79,7 +83,7 @@ describe('POST /api/plans validation', () => {
   });
 
   it('rejects a day without blocks', async () => {
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [] }] });
     expect(res.status).toBe(400);
@@ -87,7 +91,7 @@ describe('POST /api/plans validation', () => {
   });
 
   it('rejects a block without a valid training_method_id', async () => {
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [{ exercises: [] }] }] });
     expect(res.status).toBe(400);
@@ -95,7 +99,7 @@ describe('POST /api/plans validation', () => {
   });
 
   it('rejects an unknown training_method_id', async () => {
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [{ training_method_id: 999999, exercises: [] }] }] });
     expect(res.status).toBe(400);
@@ -104,8 +108,8 @@ describe('POST /api/plans validation', () => {
 
   it('rejects a pair-scope block with an odd number of exercises', async () => {
     const method = await pairScopeMethod();
-    const exercise = await createExercise(app);
-    const res = await request(app)
+    const exercise = await createExercise(agent);
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Plan',
@@ -122,7 +126,7 @@ describe('POST /api/plans validation', () => {
 
   it('rejects a single-scope block without exercises', async () => {
     const method = await singleScopeMethod();
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [{ training_method_id: method.id, exercises: [] }] }] });
     expect(res.status).toBe(400);
@@ -130,7 +134,7 @@ describe('POST /api/plans validation', () => {
 
   it('rejects an exercise without exercise_id', async () => {
     const method = await singleScopeMethod();
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Plan',
@@ -142,8 +146,8 @@ describe('POST /api/plans validation', () => {
 
   it('rejects is_unilateral_active on a scope-all block (Zirkel-Intervall)', async () => {
     const method = await circuitMethod();
-    const exercise = await createExercise(app, { is_unilateral: true });
-    const res = await request(app)
+    const exercise = await createExercise(agent, { is_unilateral: true });
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Plan',
@@ -162,8 +166,8 @@ describe('POST /api/plans validation', () => {
 
   it('rejects is_unilateral_active for an exercise that is not marked as unilateral', async () => {
     const method = await singleScopeMethod();
-    const exercise = await createExercise(app, { is_unilateral: false });
-    const res = await request(app)
+    const exercise = await createExercise(agent, { is_unilateral: false });
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Plan',
@@ -184,9 +188,9 @@ describe('POST /api/plans validation', () => {
 describe('POST /api/plans success', () => {
   it('creates a nested plan and returns the full detail structure', async () => {
     const method = await singleScopeMethod();
-    const exercise = await createExercise(app, { name: 'Kniebeuge' });
+    const exercise = await createExercise(agent, { name: 'Kniebeuge' });
 
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Ganzkörper',
@@ -225,10 +229,10 @@ describe('POST /api/plans success', () => {
 
   it('activates is_unilateral_active per exercise on a pair-scope block', async () => {
     const method = await pairScopeMethod();
-    const heavy = await createExercise(app, { is_unilateral: true });
-    const light = await createExercise(app, { is_unilateral: true });
+    const heavy = await createExercise(agent, { is_unilateral: true });
+    const light = await createExercise(agent, { is_unilateral: true });
 
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Plan',
@@ -261,9 +265,9 @@ describe('POST /api/plans success', () => {
     ['fixed-work-rest (Hochintensitätssatz)', fixedWorkRestMethod],
   ])('activates is_unilateral_active on a %s block', async (_label, methodFactory) => {
     const method = await methodFactory();
-    const exercise = await createExercise(app, { is_unilateral: true });
+    const exercise = await createExercise(agent, { is_unilateral: true });
 
-    const res = await request(app)
+    const res = await agent
       .post('/api/plans')
       .send({
         name: 'Plan',
@@ -285,10 +289,10 @@ describe('POST /api/plans success', () => {
 
 describe('GET /api/plans', () => {
   it('lists plans newest first with a day count', async () => {
-    const p1 = await createPlan(app, { name: 'Erster' });
-    const p2 = await createPlan(app, { name: 'Zweiter' });
+    const p1 = await createPlan(agent, { name: 'Erster' });
+    const p2 = await createPlan(agent, { name: 'Zweiter' });
 
-    const res = await request(app).get('/api/plans');
+    const res = await agent.get('/api/plans');
 
     expect(res.status).toBe(200);
     expect(res.body.map((p: { id: number }) => p.id)).toEqual([p2.id, p1.id]);
@@ -298,7 +302,7 @@ describe('GET /api/plans', () => {
 
 describe('GET /api/plans/:id', () => {
   it('returns 404 for an unknown id', async () => {
-    const res = await request(app).get('/api/plans/999999');
+    const res = await agent.get('/api/plans/999999');
     expect(res.status).toBe(404);
   });
 });
@@ -306,12 +310,12 @@ describe('GET /api/plans/:id', () => {
 describe('PUT /api/plans/:id', () => {
   it('replaces all days of a plan', async () => {
     const method = await singleScopeMethod();
-    const exercise = await createExercise(app);
-    const plan = await createPlan(app, {
+    const exercise = await createExercise(agent);
+    const plan = await createPlan(agent, {
       days: [{ name: 'Alt', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
     });
 
-    const res = await request(app)
+    const res = await agent
       .put(`/api/plans/${plan.id}`)
       .send({
         name: plan.name,
@@ -324,23 +328,23 @@ describe('PUT /api/plans/:id', () => {
   });
 
   it('returns 404 for an unknown id', async () => {
-    const res = await request(app).put('/api/plans/999999').send({ name: 'X', days: [] });
+    const res = await agent.put('/api/plans/999999').send({ name: 'X', days: [] });
     expect(res.status).toBe(404);
   });
 });
 
 describe('DELETE /api/plans/:id', () => {
   it('deletes a plan', async () => {
-    const plan = await createPlan(app);
-    const res = await request(app).delete(`/api/plans/${plan.id}`);
+    const plan = await createPlan(agent);
+    const res = await agent.delete(`/api/plans/${plan.id}`);
     expect(res.status).toBe(204);
 
-    const getRes = await request(app).get(`/api/plans/${plan.id}`);
+    const getRes = await agent.get(`/api/plans/${plan.id}`);
     expect(getRes.status).toBe(404);
   });
 
   it('returns 404 for an unknown id', async () => {
-    const res = await request(app).delete('/api/plans/999999');
+    const res = await agent.delete('/api/plans/999999');
     expect(res.status).toBe(404);
   });
 });

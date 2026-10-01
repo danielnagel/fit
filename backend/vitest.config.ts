@@ -9,6 +9,7 @@ export default defineConfig({
       PGUSER: 'fit_test',
       PGPASSWORD: 'fit_test',
       PGDATABASE: 'fit_test',
+      JWT_SECRET: 'test-secret',
     },
     setupFiles: ['./test/setup.ts'],
     isolate: false,
