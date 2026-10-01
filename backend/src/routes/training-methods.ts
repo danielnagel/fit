@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
+import { currentUser } from '../middleware/requireAuth.js';
 
 export const trainingMethodsRouter = Router();
 
@@ -107,13 +108,18 @@ function normalize(input: TrainingMethodInput) {
 const COLUMNS =
   'id, name, scope, timing_family, window_seconds, work_seconds, rest_seconds, rest_formula, rest_factor, stop_condition, rounds, total_duration_seconds, created_at';
 
-trainingMethodsRouter.get('/', async (_req, res) => {
-  const result = await pool.query(`SELECT ${COLUMNS} FROM training_methods ORDER BY name`);
+trainingMethodsRouter.get('/', async (req, res) => {
+  const result = await pool.query(`SELECT ${COLUMNS} FROM training_methods WHERE user_id = $1 ORDER BY name`, [
+    currentUser(req).id,
+  ]);
   res.json(result.rows);
 });
 
 trainingMethodsRouter.get('/:id', async (req, res) => {
-  const result = await pool.query(`SELECT ${COLUMNS} FROM training_methods WHERE id = $1`, [req.params.id]);
+  const result = await pool.query(`SELECT ${COLUMNS} FROM training_methods WHERE id = $1 AND user_id = $2`, [
+    req.params.id,
+    currentUser(req).id,
+  ]);
   if (result.rows.length === 0) {
     res.status(404).json({ message: 'Trainingsmethode nicht gefunden' });
     return;
@@ -134,9 +140,10 @@ trainingMethodsRouter.post('/', async (req, res) => {
     `INSERT INTO training_methods
        (user_id, name, scope, timing_family, window_seconds, work_seconds, rest_seconds, rest_formula, rest_factor,
         stop_condition, rounds, total_duration_seconds)
-     VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
      RETURNING ${COLUMNS}`,
     [
+      currentUser(req).id,
       m.name,
       m.scope,
       m.timing_family,
@@ -166,7 +173,7 @@ trainingMethodsRouter.put('/:id', async (req, res) => {
     `UPDATE training_methods
      SET name = $1, scope = $2, timing_family = $3, window_seconds = $4, work_seconds = $5, rest_seconds = $6,
          rest_formula = $7, rest_factor = $8, stop_condition = $9, rounds = $10, total_duration_seconds = $11
-     WHERE id = $12
+     WHERE id = $12 AND user_id = $13
      RETURNING ${COLUMNS}`,
     [
       m.name,
@@ -181,6 +188,7 @@ trainingMethodsRouter.put('/:id', async (req, res) => {
       m.rounds,
       m.total_duration_seconds,
       req.params.id,
+      currentUser(req).id,
     ],
   );
   if (result.rows.length === 0) {
@@ -192,7 +200,10 @@ trainingMethodsRouter.put('/:id', async (req, res) => {
 
 trainingMethodsRouter.delete('/:id', async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM training_methods WHERE id = $1', [req.params.id]);
+    const result = await pool.query('DELETE FROM training_methods WHERE id = $1 AND user_id = $2', [
+      req.params.id,
+      currentUser(req).id,
+    ]);
     if (result.rowCount === 0) {
       res.status(404).json({ message: 'Trainingsmethode nicht gefunden' });
       return;

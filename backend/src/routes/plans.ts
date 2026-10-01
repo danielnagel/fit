@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { PoolClient } from 'pg';
 import { pool } from '../db.js';
+import { currentUser } from '../middleware/requireAuth.js';
 
 export const plansRouter = Router();
 
@@ -32,7 +33,7 @@ type DayInput = {
 };
 type PlanInput = { name?: string; days?: DayInput[] };
 
-async function validatePlan(plan: PlanInput): Promise<string | null> {
+async function validatePlan(plan: PlanInput, userId: number): Promise<string | null> {
   if (typeof plan.name !== 'string' || !plan.name.trim()) {
     return 'name ist erforderlich';
   }
@@ -54,8 +55,8 @@ async function validatePlan(plan: PlanInput): Promise<string | null> {
   }
 
   const methodsResult = await pool.query<{ id: number; scope: Scope; timing_family: string }>(
-    'SELECT id, scope, timing_family FROM training_methods WHERE id = ANY($1)',
-    [Array.from(methodIds)],
+    'SELECT id, scope, timing_family FROM training_methods WHERE id = ANY($1) AND user_id = $2',
+    [Array.from(methodIds), userId],
   );
   const methodById = new Map(methodsResult.rows.map((row) => [row.id, row]));
 
@@ -68,8 +69,8 @@ async function validatePlan(plan: PlanInput): Promise<string | null> {
     }
   }
   const exercisesResult = await pool.query<{ id: number; is_unilateral: boolean }>(
-    'SELECT id, is_unilateral FROM exercises WHERE id = ANY($1)',
-    [Array.from(exerciseIds)],
+    'SELECT id, is_unilateral FROM exercises WHERE id = ANY($1) AND user_id = $2',
+    [Array.from(exerciseIds), userId],
   );
   const isUnilateralById = new Map(exercisesResult.rows.map((row) => [row.id, row.is_unilateral]));
 
@@ -85,6 +86,10 @@ async function validatePlan(plan: PlanInput): Promise<string | null> {
       for (const exercise of exercises) {
         if (!Number.isInteger(exercise.exercise_id)) {
           return 'jede Übung benötigt eine gültige exercise_id';
+        }
+        // Fremde Übungen fallen hier ebenfalls raus (Abfrage oben ist auf den Benutzer eingeschränkt).
+        if (!isUnilateralById.has(exercise.exercise_id!)) {
+          return 'unbekannte exercise_id';
         }
         if (exercise.is_unilateral_active) {
           const allowsUnilateral =
@@ -139,8 +144,11 @@ async function insertDays(client: PoolClient, planId: number, days: DayInput[]) 
   }
 }
 
-async function loadPlanDetail(planId: number) {
-  const planResult = await pool.query('SELECT id, name, source, created_at FROM plans WHERE id = $1', [planId]);
+async function loadPlanDetail(planId: number, userId: number) {
+  const planResult = await pool.query('SELECT id, name, source, created_at FROM plans WHERE id = $1 AND user_id = $2', [
+    planId,
+    userId,
+  ]);
   if (planResult.rows.length === 0) return null;
 
   const daysResult = await pool.query(
@@ -224,21 +232,23 @@ async function loadPlanDetail(planId: number) {
   };
 }
 
-plansRouter.get('/', async (_req, res) => {
+plansRouter.get('/', async (req, res) => {
   const result = await pool.query(
     `SELECT p.id, p.name, p.source, p.created_at,
             COUNT(pd.id)::int AS day_count
      FROM plans p
      LEFT JOIN plan_days pd ON pd.plan_id = p.id
+     WHERE p.user_id = $1
      GROUP BY p.id
      ORDER BY p.created_at DESC`,
+    [currentUser(req).id],
   );
   res.json(result.rows);
 });
 
 plansRouter.get('/:id', async (req, res) => {
   const planId = Number(req.params.id);
-  const plan = await loadPlanDetail(planId);
+  const plan = await loadPlanDetail(planId, currentUser(req).id);
   if (!plan) {
     res.status(404).json({ message: 'Plan nicht gefunden' });
     return;
@@ -247,8 +257,9 @@ plansRouter.get('/:id', async (req, res) => {
 });
 
 plansRouter.post('/', async (req, res) => {
+  const userId = currentUser(req).id;
   const plan = (req.body ?? {}) as PlanInput;
-  const error = await validatePlan(plan);
+  const error = await validatePlan(plan, userId);
   if (error) {
     res.status(400).json({ message: error });
     return;
@@ -257,13 +268,14 @@ plansRouter.post('/', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const planResult = await client.query<{ id: number }>('INSERT INTO plans (user_id, name) VALUES (1, $1) RETURNING id', [
+    const planResult = await client.query<{ id: number }>('INSERT INTO plans (user_id, name) VALUES ($1, $2) RETURNING id', [
+      userId,
       plan.name!.trim(),
     ]);
     const planId = planResult.rows[0].id;
     await insertDays(client, planId, plan.days ?? []);
     await client.query('COMMIT');
-    res.status(201).json(await loadPlanDetail(planId));
+    res.status(201).json(await loadPlanDetail(planId, userId));
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(500).json({ message: (err as Error).message });
@@ -274,8 +286,9 @@ plansRouter.post('/', async (req, res) => {
 
 plansRouter.put('/:id', async (req, res) => {
   const planId = Number(req.params.id);
+  const userId = currentUser(req).id;
   const plan = (req.body ?? {}) as PlanInput;
-  const error = await validatePlan(plan);
+  const error = await validatePlan(plan, userId);
   if (error) {
     res.status(400).json({ message: error });
     return;
@@ -284,7 +297,11 @@ plansRouter.put('/:id', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const updateResult = await client.query('UPDATE plans SET name = $1 WHERE id = $2', [plan.name!.trim(), planId]);
+    const updateResult = await client.query('UPDATE plans SET name = $1 WHERE id = $2 AND user_id = $3', [
+      plan.name!.trim(),
+      planId,
+      userId,
+    ]);
     if (updateResult.rowCount === 0) {
       await client.query('ROLLBACK');
       res.status(404).json({ message: 'Plan nicht gefunden' });
@@ -293,7 +310,7 @@ plansRouter.put('/:id', async (req, res) => {
     await client.query('DELETE FROM plan_days WHERE plan_id = $1', [planId]);
     await insertDays(client, planId, plan.days ?? []);
     await client.query('COMMIT');
-    res.json(await loadPlanDetail(planId));
+    res.json(await loadPlanDetail(planId, userId));
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(500).json({ message: (err as Error).message });
@@ -304,7 +321,7 @@ plansRouter.put('/:id', async (req, res) => {
 
 plansRouter.delete('/:id', async (req, res) => {
   const planId = Number(req.params.id);
-  const result = await pool.query('DELETE FROM plans WHERE id = $1', [planId]);
+  const result = await pool.query('DELETE FROM plans WHERE id = $1 AND user_id = $2', [planId, currentUser(req).id]);
   if (result.rowCount === 0) {
     res.status(404).json({ message: 'Plan nicht gefunden' });
     return;

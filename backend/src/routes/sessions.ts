@@ -1,7 +1,32 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
+import { currentUser } from '../middleware/requireAuth.js';
 
 export const sessionsRouter = Router();
+
+// Alle /:id-Routen (inkl. Sub-Ressourcen) nur fuer Sessions des eingeloggten Benutzers; fremde und
+// unbekannte IDs liefern gleichermassen 404, damit niemand erfaehrt, welche IDs existieren.
+sessionsRouter.param('id', async (req, res, next, id: string) => {
+  const sessionId = Number(id);
+  const result = Number.isInteger(sessionId)
+    ? await pool.query(
+        `SELECT 1 FROM training_sessions ts
+         JOIN plan_weeks pw ON pw.id = ts.plan_week_id
+         WHERE ts.id = $1 AND pw.user_id = $2`,
+        [sessionId, currentUser(req).id],
+      )
+    : { rows: [] };
+  if (result.rows.length === 0) {
+    res.status(404).json({ message: 'Session nicht gefunden' });
+    return;
+  }
+  next();
+});
+
+async function ownsExercise(userId: number, exerciseId: number) {
+  const result = await pool.query('SELECT 1 FROM exercises WHERE id = $1 AND user_id = $2', [exerciseId, userId]);
+  return result.rows.length > 0;
+}
 
 async function buildDaySnapshot(planDayId: number) {
   const dayResult = await pool.query('SELECT name FROM plan_days WHERE id = $1', [planDayId]);
@@ -81,14 +106,15 @@ async function loadPreviousLoggedSets(planDayId: number | null, sessionId: numbe
 // max(unit_index) = weiteste erreichte Stufe/Runde, max(reps) = meiste Wiederholungen dabei.
 // Wie bisher ohne Einschraenkung auf denselben plan_day_id -- Bestleistung ueber alle self-paced-
 // Sessions dieser Uebung hinweg, unabhaengig vom konkreten Plan/Tag.
-async function loadStageRecords(exerciseIds: number[], sessionId: number) {
+async function loadStageRecords(exerciseIds: number[], sessionId: number, userId: number) {
   if (exerciseIds.length === 0) return [];
 
   const result = await pool.query<{ exercise_id: number; max_stage: number; best_reps: number | null }>(
     `SELECT ls.exercise_id, MAX(ls.unit_index) AS max_stage, MAX(ls.reps) AS best_reps
      FROM logged_sets ls
      JOIN training_sessions ts ON ts.id = ls.training_session_id
-     WHERE ls.exercise_id = ANY($1) AND ts.id != $2 AND ts.status = 'completed'
+     JOIN plan_weeks pw ON pw.id = ts.plan_week_id
+     WHERE ls.exercise_id = ANY($1) AND ts.id != $2 AND ts.status = 'completed' AND pw.user_id = $3
        AND EXISTS (
          SELECT 1
          FROM jsonb_array_elements(ts.day_snapshot->'blocks') AS blk
@@ -97,16 +123,18 @@ async function loadStageRecords(exerciseIds: number[], sessionId: number) {
            AND (ex->>'exercise_id')::int = ls.exercise_id
        )
      GROUP BY ls.exercise_id`,
-    [exerciseIds, sessionId],
+    [exerciseIds, sessionId, userId],
   );
   return result.rows;
 }
 
-async function loadSessionDetail(sessionId: number) {
+async function loadSessionDetail(sessionId: number, userId: number) {
   const sessionResult = await pool.query(
-    `SELECT id, plan_week_id, plan_day_id, day_snapshot, status, started_at, completed_at
-     FROM training_sessions WHERE id = $1`,
-    [sessionId],
+    `SELECT ts.id, ts.plan_week_id, ts.plan_day_id, ts.day_snapshot, ts.status, ts.started_at, ts.completed_at
+     FROM training_sessions ts
+     JOIN plan_weeks pw ON pw.id = ts.plan_week_id
+     WHERE ts.id = $1 AND pw.user_id = $2`,
+    [sessionId, userId],
   );
   if (sessionResult.rows.length === 0) return null;
   const session = sessionResult.rows[0];
@@ -121,7 +149,7 @@ async function loadSessionDetail(sessionId: number) {
   const exerciseIds: number[] = (session.day_snapshot.blocks ?? []).flatMap((block: { exercises: { exercise_id: number }[] }) =>
     block.exercises.map((ex) => ex.exercise_id),
   );
-  const records = await loadStageRecords(exerciseIds, sessionId);
+  const records = await loadStageRecords(exerciseIds, sessionId, userId);
 
   const finishedExercisesResult = await pool.query<{ exercise_id: number; plan_block_exercise_id: number | null }>(
     `SELECT exercise_id, plan_block_exercise_id FROM session_finished_exercises WHERE training_session_id = $1`,
@@ -153,8 +181,8 @@ async function loadSessionDetail(sessionId: number) {
 }
 
 sessionsRouter.get('/', async (req, res) => {
-  const conditions: string[] = [];
-  const params: (string | number)[] = [];
+  const params: (string | number)[] = [currentUser(req).id];
+  const conditions: string[] = ['pw.user_id = $1'];
   if (req.query.plan_week_id) {
     params.push(Number(req.query.plan_week_id));
     conditions.push(`ts.plan_week_id = $${params.length}`);
@@ -163,7 +191,7 @@ sessionsRouter.get('/', async (req, res) => {
     params.push(String(req.query.status));
     conditions.push(`ts.status = $${params.length}`);
   }
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const where = `WHERE ${conditions.join(' AND ')}`;
 
   const result = await pool.query(
     `SELECT ts.id, ts.plan_week_id, ts.plan_day_id, ts.day_snapshot, ts.status, ts.started_at, ts.completed_at,
@@ -178,7 +206,7 @@ sessionsRouter.get('/', async (req, res) => {
 });
 
 sessionsRouter.get('/:id', async (req, res) => {
-  const session = await loadSessionDetail(Number(req.params.id));
+  const session = await loadSessionDetail(Number(req.params.id), currentUser(req).id);
   if (!session) {
     res.status(404).json({ message: 'Session nicht gefunden' });
     return;
@@ -193,8 +221,10 @@ sessionsRouter.post('/', async (req, res) => {
     return;
   }
 
+  const userId = currentUser(req).id;
   const activeWeekResult = await pool.query<{ id: number; plan_id: number }>(
-    'SELECT id, plan_id FROM plan_weeks WHERE ended_at IS NULL',
+    'SELECT id, plan_id FROM plan_weeks WHERE user_id = $1 AND ended_at IS NULL',
+    [userId],
   );
   if (activeWeekResult.rows.length === 0) {
     res.status(400).json({ message: 'Keine aktive Woche — zuerst eine Woche starten' });
@@ -218,7 +248,7 @@ sessionsRouter.post('/', async (req, res) => {
     [activeWeek.id, body.plan_day_id, JSON.stringify(snapshot)],
   );
 
-  res.status(201).json(await loadSessionDetail(result.rows[0].id));
+  res.status(201).json(await loadSessionDetail(result.rows[0].id, userId));
 });
 
 sessionsRouter.patch('/:id', async (req, res) => {
@@ -238,7 +268,7 @@ sessionsRouter.patch('/:id', async (req, res) => {
     res.status(404).json({ message: 'Session nicht gefunden' });
     return;
   }
-  res.json(await loadSessionDetail(Number(req.params.id)));
+  res.json(await loadSessionDetail(Number(req.params.id), currentUser(req).id));
 });
 
 sessionsRouter.post('/:id/logged-sets', async (req, res) => {
@@ -261,6 +291,10 @@ sessionsRouter.post('/:id/logged-sets', async (req, res) => {
   }
   if (side !== undefined && side !== null && side !== 'left' && side !== 'right') {
     res.status(400).json({ message: 'side muss "left", "right" oder null sein' });
+    return;
+  }
+  if (!(await ownsExercise(currentUser(req).id, exercise_id!))) {
+    res.status(400).json({ message: 'unbekannte exercise_id' });
     return;
   }
 
@@ -287,6 +321,11 @@ sessionsRouter.post('/:id/finished-exercises', async (req, res) => {
     res.status(400).json({ message: 'plan_block_exercise_id muss eine Zahl oder null sein' });
     return;
   }
+  const userId = currentUser(req).id;
+  if (!(await ownsExercise(userId, exercise_id!))) {
+    res.status(400).json({ message: 'unbekannte exercise_id' });
+    return;
+  }
 
   // exercise_id allein identifiziert nicht zuverlaessig den Plan-Slot -- dieselbe Uebung kann als
   // andere Variante mehrfach im selben Block vorkommen. Ist plan_block_exercise_id bekannt, wird
@@ -307,7 +346,7 @@ sessionsRouter.post('/:id/finished-exercises', async (req, res) => {
       [sessionId, exercise_id],
     );
   }
-  res.status(201).json(await loadSessionDetail(sessionId));
+  res.status(201).json(await loadSessionDetail(sessionId, userId));
 });
 
 sessionsRouter.put('/:id/timer-anchor/:slot', async (req, res) => {
