@@ -4,6 +4,7 @@ import PlanDetail from './PlanDetail';
 import type { PlanDetailData } from './PlanDetail';
 import ConfirmDialog from './ConfirmDialog';
 import type { ConfirmDialogHandle } from './ConfirmDialog';
+import { apiFetch } from './api';
 
 type Plan = {
   id: number;
@@ -24,7 +25,7 @@ export default function Plans() {
   const [details, setDetails] = useState<Record<number, PlanDetailData>>({});
 
   const loadPlans = () => {
-    fetch('/api/plans')
+    apiFetch('/api/plans')
       .then((res) => res.json())
       .then(setPlans)
       .catch((err) => setError(String(err)));
@@ -32,7 +33,7 @@ export default function Plans() {
 
   useEffect(() => {
     loadPlans();
-    fetch('/api/exercises')
+    apiFetch('/api/exercises')
       .then((res) => res.json())
       .then(setExercises)
       .catch((err) => setError(String(err)));
@@ -58,7 +59,7 @@ export default function Plans() {
     }
     setExpandedId(id);
     if (!details[id]) {
-      fetch(`/api/plans/${id}`)
+      apiFetch(`/api/plans/${id}`)
         .then((res) => res.json())
         .then((detail) => setDetails((prev) => ({ ...prev, [id]: detail })))
         .catch((err) => setError(String(err)));
@@ -72,7 +73,7 @@ export default function Plans() {
 
   const handleDelete = async () => {
     if (pendingDeleteId === null) return;
-    const res = await fetch(`/api/plans/${pendingDeleteId}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/plans/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       setError(body.message ?? `Fehler (${res.status})`);

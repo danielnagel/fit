@@ -5,6 +5,7 @@ import type { ConfirmDialogHandle } from './ConfirmDialog';
 import DurationInput from './DurationInput';
 import type { TrainingMethod, Scope, TimingFamily, RestFormula, StopCondition } from './trainingMethods';
 import { SCOPE_LABELS, TIMING_FAMILY_LABELS, REST_FORMULA_LABELS, STOP_CONDITION_LABELS } from './trainingMethods';
+import { apiFetch } from './api';
 
 type MethodForm = {
   name: string;
@@ -211,7 +212,7 @@ export default function TrainingMethods() {
   const deleteDialogRef = useRef<ConfirmDialogHandle>(null);
 
   const load = () => {
-    fetch('/api/training-methods')
+    apiFetch('/api/training-methods')
       .then((res) => res.json())
       .then(setMethods)
       .catch((err) => setError(String(err)));
@@ -227,7 +228,7 @@ export default function TrainingMethods() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    const res = await fetch('/api/training-methods', {
+    const res = await apiFetch('/api/training-methods', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(toBody(form)),
@@ -249,7 +250,7 @@ export default function TrainingMethods() {
 
   const saveEdit = async (id: number) => {
     setError(null);
-    const res = await fetch(`/api/training-methods/${id}`, {
+    const res = await apiFetch(`/api/training-methods/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(toBody(editForm)),
@@ -270,7 +271,7 @@ export default function TrainingMethods() {
 
   const handleDelete = async () => {
     if (pendingDeleteId === null) return;
-    const res = await fetch(`/api/training-methods/${pendingDeleteId}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/training-methods/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       setError(body.message ?? `Fehler (${res.status})`);

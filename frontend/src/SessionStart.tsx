@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 import type { ConfirmDialogHandle } from './ConfirmDialog';
+import { apiFetch } from './api';
 
 type Plan = { id: number; name: string; day_count: number };
 type PlanDay = { id: number; name: string; blocks: { training_method: { name: string } }[] };
@@ -28,7 +29,7 @@ export default function SessionStart({ onStarted }: Props) {
   const endDialogRef = useRef<ConfirmDialogHandle>(null);
 
   const loadActiveWeek = () => {
-    fetch('/api/plan-weeks/active')
+    apiFetch('/api/plan-weeks/active')
       .then((res) => res.json())
       .then(setActiveWeek)
       .catch((err) => setError(String(err)));
@@ -39,12 +40,12 @@ export default function SessionStart({ onStarted }: Props) {
   useEffect(() => {
     if (activeWeek === undefined) return;
     if (activeWeek) {
-      fetch(`/api/plans/${activeWeek.plan_id}`)
+      apiFetch(`/api/plans/${activeWeek.plan_id}`)
         .then((res) => res.json())
         .then((plan) => setDays(plan.days))
         .catch((err) => setError(String(err)));
     } else {
-      fetch('/api/plans')
+      apiFetch('/api/plans')
         .then((res) => res.json())
         .then(setPlans)
         .catch((err) => setError(String(err)));
@@ -53,7 +54,7 @@ export default function SessionStart({ onStarted }: Props) {
 
   const handleStartWeek = async () => {
     setError(null);
-    const res = await fetch('/api/plan-weeks', {
+    const res = await apiFetch('/api/plan-weeks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ plan_id: Number(planId) }),
@@ -69,7 +70,7 @@ export default function SessionStart({ onStarted }: Props) {
   const handleEndWeek = async () => {
     if (!activeWeek) return;
     setError(null);
-    const res = await fetch(`/api/plan-weeks/${activeWeek.id}`, { method: 'PATCH' });
+    const res = await apiFetch(`/api/plan-weeks/${activeWeek.id}`, { method: 'PATCH' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       setError(body.message ?? `Fehler (${res.status})`);
@@ -81,7 +82,7 @@ export default function SessionStart({ onStarted }: Props) {
 
   const handleStartTraining = async () => {
     setError(null);
-    const res = await fetch('/api/sessions', {
+    const res = await apiFetch('/api/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ plan_day_id: Number(dayId) }),

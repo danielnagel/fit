@@ -51,7 +51,7 @@ function NavIcon({ name, className }: { name: IconName; className?: string }) {
   }
 }
 
-export default function Nav() {
+export default function Nav({ username, onLogout }: { username?: string; onLogout?: () => void }) {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-edge bg-surface/90 backdrop-blur">
@@ -79,6 +79,15 @@ export default function Nav() {
               </NavLink>
             ))}
           </div>
+
+          {onLogout && (
+            <div className="flex items-center gap-2 sm:ml-2 sm:border-l sm:border-edge sm:pl-3">
+              {username && <span className="hint max-w-32 truncate">{username}</span>}
+              <button type="button" className="btn" onClick={onLogout}>
+                Abmelden
+              </button>
+            </div>
+          )}
         </div>
       </header>
 

@@ -1,4 +1,6 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './AuthContext';
+import Login from './Login';
 import Nav from './Nav';
 import Exercises from './Exercises';
 import Plans from './Plans';
@@ -6,12 +8,40 @@ import Training from './Training';
 import History from './History';
 import TrainingMethods from './TrainingMethods';
 
-export default function App() {
+type LoginRedirectState = { from?: string } | null;
+
+// Nach dem (Re-)Login zurueck auf die urspruengliche URL, z. B. eine laufende Session -- deren
+// Zustand liegt serverseitig, ein Reload der Seite reicht zum Fortsetzen.
+function AfterLogin() {
+  const from = (useLocation().state as LoginRedirectState)?.from;
+  return <Navigate to={from && from !== '/login' ? from : '/training'} replace />;
+}
+
+function ToLogin() {
+  const location = useLocation();
+  return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
+}
+
+function AppRoutes() {
+  const { state, logout } = useAuth();
+
+  if (state.status === 'loading') return null;
+
+  if (state.status === 'anonymous') {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<ToLogin />} />
+      </Routes>
+    );
+  }
+
   return (
-    <BrowserRouter>
-      <Nav />
+    <>
+      <Nav username={state.user.username} onLogout={logout} />
       <main className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 sm:pb-12">
         <Routes>
+          <Route path="/login" element={<AfterLogin />} />
           <Route path="/training" element={<Training />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/training-methods" element={<TrainingMethods />} />
@@ -20,6 +50,16 @@ export default function App() {
           <Route path="*" element={<Navigate to="/training" replace />} />
         </Routes>
       </main>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

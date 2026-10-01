@@ -12,6 +12,7 @@ beforeEach(() => {
   vi.stubGlobal('fetch', fetchMock);
   fetchMock.mockReset();
   fetchMock.mockImplementation((url: string) => {
+    if (url === '/api/auth/me') return Promise.resolve(jsonResponse({ id: 1, username: 'anna' }));
     if (url === '/api/plan-weeks/active') return Promise.resolve(jsonResponse(null));
     return Promise.resolve(jsonResponse([]));
   });

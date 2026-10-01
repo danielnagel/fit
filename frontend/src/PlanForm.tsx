@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { TrainingMethod } from './trainingMethods';
+import { apiFetch } from './api';
 
 type Exercise = { id: number; name: string; is_unilateral: boolean };
 
@@ -55,7 +56,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
   const exercisesById = useMemo(() => new Map(exercises.map((e) => [String(e.id), e])), [exercises]);
 
   useEffect(() => {
-    fetch('/api/training-methods')
+    apiFetch('/api/training-methods')
       .then((res) => res.json())
       .then((loadedMethods: TrainingMethod[]) => {
         setMethods(loadedMethods);
@@ -64,7 +65,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
           setLoading(false);
           return;
         }
-        fetch(`/api/plans/${planId}`)
+        apiFetch(`/api/plans/${planId}`)
           .then((res) => res.json())
           .then((plan) => {
             setName(plan.name);
@@ -224,7 +225,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
       })),
     };
 
-    const res = await fetch(planId === undefined ? '/api/plans' : `/api/plans/${planId}`, {
+    const res = await apiFetch(planId === undefined ? '/api/plans' : `/api/plans/${planId}`, {
       method: planId === undefined ? 'POST' : 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

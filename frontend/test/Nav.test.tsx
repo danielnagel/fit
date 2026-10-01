@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import Nav from '../src/Nav';
 
 const LINKS: { label: string; href: string }[] = [
@@ -56,5 +56,20 @@ describe('Nav', () => {
     for (const link of screen.getAllByRole('link', { name: 'Übungen' })) {
       expect(link).not.toHaveAttribute('aria-current');
     }
+  });
+});
+
+describe('Nav user menu', () => {
+  it('shows the username and calls onLogout', async () => {
+    const onLogout = vi.fn();
+    render(
+      <MemoryRouter initialEntries={['/training']}>
+        <Nav username="anna" onLogout={onLogout} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('anna')).toBeInTheDocument();
+    screen.getByRole('button', { name: 'Abmelden' }).click();
+    expect(onLogout).toHaveBeenCalledOnce();
   });
 });

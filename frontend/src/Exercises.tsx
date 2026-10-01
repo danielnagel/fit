@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 import type { ConfirmDialogHandle } from './ConfirmDialog';
+import { apiFetch } from './api';
 
 type Exercise = { id: number; name: string; description: string | null; is_unilateral: boolean; created_at: string };
 
@@ -19,7 +20,7 @@ export default function Exercises() {
   const deleteDialogRef = useRef<ConfirmDialogHandle>(null);
 
   const load = () => {
-    fetch('/api/exercises')
+    apiFetch('/api/exercises')
       .then((res) => res.json())
       .then(setExercises)
       .catch((err) => setError(String(err)));
@@ -31,7 +32,7 @@ export default function Exercises() {
     e.preventDefault();
     setError(null);
 
-    const res = await fetch('/api/exercises', {
+    const res = await apiFetch('/api/exercises', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, description, is_unilateral: isUnilateral }),
@@ -59,7 +60,7 @@ export default function Exercises() {
 
   const saveEdit = async (id: number) => {
     setError(null);
-    const res = await fetch(`/api/exercises/${id}`, {
+    const res = await apiFetch(`/api/exercises/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: editName, description: editDescription, is_unilateral: editIsUnilateral }),
@@ -81,7 +82,7 @@ export default function Exercises() {
   const handleDelete = async () => {
     if (pendingDeleteId === null) return;
     setError(null);
-    const res = await fetch(`/api/exercises/${pendingDeleteId}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/exercises/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       setError(body.message ?? `Fehler (${res.status})`);

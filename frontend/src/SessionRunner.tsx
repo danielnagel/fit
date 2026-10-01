@@ -4,6 +4,7 @@ import type { ConfirmDialogHandle } from './ConfirmDialog';
 import BlockRunner from './BlockRunner';
 import { activeUnitPosition, isBlockDone } from './blockRunnerUtils';
 import type { SessionDetail, TimerSlot } from './sessionTypes';
+import { apiFetch } from './api';
 
 export type {
   SnapshotExercise,
@@ -28,7 +29,7 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
   const abortDialogRef = useRef<ConfirmDialogHandle>(null);
 
   const load = () => {
-    fetch(`/api/sessions/${sessionId}`)
+    apiFetch(`/api/sessions/${sessionId}`)
       .then((res) => res.json())
       .then(setSession)
       .catch((err) => setError(String(err)));
@@ -44,7 +45,7 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
     completedSeconds?: number | null,
     side?: 'left' | 'right' | null,
   ) => {
-    await fetch(`/api/sessions/${sessionId}/logged-sets`, {
+    await apiFetch(`/api/sessions/${sessionId}/logged-sets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -60,7 +61,7 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
   };
 
   const finishExercise = async (exerciseId: number, planBlockExerciseId: number | undefined) => {
-    await fetch(`/api/sessions/${sessionId}/finished-exercises`, {
+    await apiFetch(`/api/sessions/${sessionId}/finished-exercises`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ exercise_id: exerciseId, plan_block_exercise_id: planBlockExerciseId ?? null }),
@@ -69,7 +70,7 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
   };
 
   const setTimerAnchor = (slot: TimerSlot, phaseKey: string, durationSeconds: number) => {
-    fetch(`/api/sessions/${sessionId}/timer-anchor/${slot}`, {
+    apiFetch(`/api/sessions/${sessionId}/timer-anchor/${slot}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phase_key: phaseKey, duration_seconds: durationSeconds }),
@@ -77,7 +78,7 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
   };
 
   const setStatus = async (status: string) => {
-    await fetch(`/api/sessions/${sessionId}`, {
+    await apiFetch(`/api/sessions/${sessionId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),

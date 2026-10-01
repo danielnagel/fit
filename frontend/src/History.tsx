@@ -5,6 +5,7 @@ import type { ProgressPoint } from './ProgressChart';
 import ConfirmDialog from './ConfirmDialog';
 import type { ConfirmDialogHandle } from './ConfirmDialog';
 import { formatMmSs } from './useTimer';
+import { apiFetch } from './api';
 
 type SessionListItem = {
   id: number;
@@ -78,7 +79,7 @@ export default function History() {
   const deleteSetDialogRef = useRef<ConfirmDialogHandle>(null);
 
   const loadSessions = () => {
-    fetch('/api/sessions')
+    apiFetch('/api/sessions')
       .then((res) => res.json())
       .then(setSessions)
       .catch((err) => setError(String(err)));
@@ -86,7 +87,7 @@ export default function History() {
 
   useEffect(() => {
     loadSessions();
-    fetch('/api/exercises')
+    apiFetch('/api/exercises')
       .then((res) => res.json())
       .then(setExercises)
       .catch((err) => setError(String(err)));
@@ -97,7 +98,7 @@ export default function History() {
       setProgress(null);
       return;
     }
-    fetch(`/api/exercises/${exerciseId}/progress`)
+    apiFetch(`/api/exercises/${exerciseId}/progress`)
       .then((res) => res.json())
       .then(setProgress)
       .catch((err) => setError(String(err)));
@@ -116,7 +117,7 @@ export default function History() {
     }
     setExpandedId(id);
     if (!details[id]) {
-      fetch(`/api/sessions/${id}`)
+      apiFetch(`/api/sessions/${id}`)
         .then((res) => res.json())
         .then((detail) => setDetails((prev) => ({ ...prev, [id]: detail })))
         .catch((err) => setError(String(err)));
@@ -130,7 +131,7 @@ export default function History() {
 
   const handleDelete = async () => {
     if (pendingDeleteId === null) return;
-    const res = await fetch(`/api/sessions/${pendingDeleteId}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/sessions/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       setError(body.message ?? `Fehler (${res.status})`);
@@ -148,13 +149,13 @@ export default function History() {
   const handleDeleteSet = async () => {
     if (!pendingDeleteSet) return;
     const { sessionId, setId } = pendingDeleteSet;
-    const res = await fetch(`/api/sessions/${sessionId}/logged-sets/${setId}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/sessions/${sessionId}/logged-sets/${setId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       setError(body.message ?? `Fehler (${res.status})`);
       return;
     }
-    const detail = await fetch(`/api/sessions/${sessionId}`).then((r) => r.json());
+    const detail = await apiFetch(`/api/sessions/${sessionId}`).then((r) => r.json());
     setDetails((prev) => ({ ...prev, [sessionId]: detail }));
   };
 
