@@ -20,7 +20,10 @@ services:
       - internal
 
   fit-backend:
-    build: ./backend
+    # Prod-Image (Default-Target), damit e2e genau das testet, was deployt wird.
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     depends_on:
       fit-db:
         condition: service_healthy
@@ -38,7 +41,9 @@ services:
       - internal
 
   fit-frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     depends_on:
       - fit-backend
     ports:

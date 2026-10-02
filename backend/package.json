@@ -5,14 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
     "pretest": "docker compose -f ../docker-compose.test.yml up -d --wait fit-db",
     "test": "vitest run",
     "test:watch": "vitest",
-    "user:create": "tsx src/cli/user.ts create",
-    "user:list": "tsx src/cli/user.ts list",
-    "user:set-password": "tsx src/cli/user.ts set-password",
-    "user:delete": "tsx src/cli/user.ts delete",
-    "user:assign-data": "tsx src/cli/user.ts assign-data"
+    "user:create": "node dist/cli/user.js create",
+    "user:list": "node dist/cli/user.js list",
+    "user:set-password": "node dist/cli/user.js set-password",
+    "user:delete": "node dist/cli/user.js delete",
+    "user:assign-data": "node dist/cli/user.js assign-data"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
