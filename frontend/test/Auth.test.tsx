@@ -124,3 +124,35 @@ describe('authentication flow', () => {
     expect(await screen.findByRole('heading', { name: 'Übungen' })).toBeInTheDocument();
   });
 });
+
+describe('demo mode', () => {
+  it('hides the demo entry outside of demo mode', async () => {
+    window.history.pushState({}, '', '/login');
+    render(<App />);
+
+    await screen.findByRole('heading', { name: 'Anmelden' });
+    expect(screen.queryByRole('button', { name: 'Demo ausprobieren' })).not.toBeInTheDocument();
+  });
+
+  it('starts a demo session from the login page', async () => {
+    const base = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === '/api/auth/config') return Promise.resolve(jsonResponse({ demo: true, demo_ttl_minutes: 60 }));
+      if (url === '/api/auth/demo') {
+        loggedIn = true;
+        return Promise.resolve(jsonResponse({ id: 7, username: 'demo-abc123' }, 201));
+      }
+      return base(url, init);
+    });
+    const user = userEvent.setup();
+    window.history.pushState({}, '', '/plans');
+    render(<App />);
+
+    expect(await screen.findByText(/nach 60 Minuten gelöscht/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Demo ausprobieren' }));
+
+    expect(await screen.findByRole('heading', { name: 'Trainingspläne' })).toBeInTheDocument();
+    expect(screen.getByText('demo-abc123')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/demo', { method: 'POST' });
+  });
+});

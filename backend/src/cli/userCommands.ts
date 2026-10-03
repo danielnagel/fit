@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg';
 import { pool } from '../db.js';
 import { hashPassword } from '../auth/password.js';
 import { seedDefaultTrainingMethods } from '../defaultTrainingMethods.js';
+import { deleteUserWithData } from '../users.js';
 
 // Ein-/Ausgabe als Parameter, damit die Befehle in Tests ohne Terminal laufen.
 export interface CliIo {
@@ -175,14 +176,10 @@ export async function deleteUser(io: CliIo, args: { ref?: string; yes: boolean }
     }
   }
 
-  // Erst die Plaene (kaskadiert ueber Wochen/Sessions bis zu logged_sets und plan_block_exercises),
-  // dann den Benutzer. Direkt per users-CASCADE scheitert es, weil Postgres die Uebungen sonst vor
-  // den logged_sets loescht, die (ohne CASCADE) auf sie verweisen.
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query('DELETE FROM plans WHERE user_id = $1', [user.id]);
-    await client.query('DELETE FROM users WHERE id = $1', [user.id]);
+    await deleteUserWithData(client, user.id);
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');

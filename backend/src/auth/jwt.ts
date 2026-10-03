@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 export const AUTH_COOKIE = 'token';
 
 // Grosszuegig, weil man sich beim Training nicht staendig neu einloggen will.
-const SESSION_DAYS = 30;
+export const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface AuthUser {
   id: number;
@@ -17,8 +17,10 @@ function secret(): string {
   return value;
 }
 
-export function signToken(user: AuthUser): string {
-  return jwt.sign({ sub: String(user.id), username: user.username }, secret(), { expiresIn: `${SESSION_DAYS}d` });
+export function signToken(user: AuthUser, expiresInMs = SESSION_MAX_AGE_MS): string {
+  return jwt.sign({ sub: String(user.id), username: user.username }, secret(), {
+    expiresIn: Math.floor(expiresInMs / 1000),
+  });
 }
 
 export function verifyToken(token: string): AuthUser | null {
@@ -39,5 +41,3 @@ export function cookieOptions(): CookieOptions {
     path: '/',
   };
 }
-
-export const SESSION_MAX_AGE_MS = SESSION_DAYS * 24 * 60 * 60 * 1000;

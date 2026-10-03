@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Pool, PoolClient } from 'pg';
 import { pool } from '../db.js';
 import { currentUser } from '../middleware/requireAuth.js';
 
@@ -28,11 +29,11 @@ async function ownsExercise(userId: number, exerciseId: number) {
   return result.rows.length > 0;
 }
 
-async function buildDaySnapshot(planDayId: number) {
-  const dayResult = await pool.query('SELECT name FROM plan_days WHERE id = $1', [planDayId]);
+export async function buildDaySnapshot(planDayId: number, db: Pool | PoolClient = pool) {
+  const dayResult = await db.query('SELECT name FROM plan_days WHERE id = $1', [planDayId]);
   const day = dayResult.rows[0];
 
-  const blocksResult = await pool.query(
+  const blocksResult = await db.query(
     `SELECT pb.id, tm.name, tm.scope, tm.timing_family, tm.window_seconds, tm.work_seconds, tm.rest_seconds,
             tm.rest_formula, tm.rest_factor, tm.stop_condition, tm.rounds, tm.total_duration_seconds
      FROM plan_blocks pb
@@ -44,7 +45,7 @@ async function buildDaySnapshot(planDayId: number) {
 
   const blocks = [];
   for (const block of blocksResult.rows) {
-    const exercisesResult = await pool.query(
+    const exercisesResult = await db.query(
       `SELECT pbe.id AS plan_block_exercise_id, pbe.exercise_id, pbe.reps_min, pbe.reps_max, pbe.note,
               pbe.is_unilateral_active, e.name AS exercise_name, e.description AS exercise_description
        FROM plan_block_exercises pbe

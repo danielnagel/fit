@@ -24,9 +24,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   // Ein JWT bleibt bis zum Ablauf gueltig. Ohne diese Pruefung koennte ein geloeschter Benutzer
-  // (oder einer ohne Login, z. B. der Default-User) mit einem alten Cookie weiterarbeiten.
+  // (oder einer ohne Login, z. B. der Default-User, oder ein abgelaufener Demo-Benutzer, den der
+  // Aufraeum-Job noch nicht erwischt hat) mit einem alten Cookie weiterarbeiten.
   const { rows } = await pool.query<{ username: string }>(
-    'SELECT username FROM users WHERE id = $1 AND password_hash IS NOT NULL',
+    `SELECT username FROM users
+     WHERE id = $1 AND password_hash IS NOT NULL AND (demo_expires_at IS NULL OR demo_expires_at > now())`,
     [user.id],
   );
   if (rows.length === 0) {

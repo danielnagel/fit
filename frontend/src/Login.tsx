@@ -1,13 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from './AuthContext';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, startDemo } = useAuth();
+  const [demo, setDemo] = useState<{ ttlMinutes: number } | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((config) => {
+        if (config?.demo) setDemo({ ttlMinutes: config.demo_ttl_minutes });
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const handleDemo = async () => {
+    setError(null);
+    setSubmitting(true);
+    const message = await startDemo();
+    setSubmitting(false);
+    if (message) setError(message);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -27,13 +45,25 @@ export default function Login() {
         <img src="/logo.svg" alt="" className="h-10 w-10" />
         <span className="text-xl font-semibold tracking-tight text-fg">Fit</span>
       </div>
+      {error && (
+        <p role="alert" className="mb-3 text-sm text-danger">
+          {error}
+        </p>
+      )}
+      {demo && (
+        <section className="card mb-4 flex flex-col gap-3">
+          <h2>Demo</h2>
+          <p className="hint">
+            Probier Fit mit Beispieldaten aus: ein Trainingsplan, ein paar vergangene Trainings und eine laufende Woche.
+            Dein Demo-Zugang und alle Änderungen werden nach {demo.ttlMinutes} Minuten gelöscht.
+          </p>
+          <button type="button" className="btn-primary" onClick={handleDemo} disabled={submitting}>
+            Demo ausprobieren
+          </button>
+        </section>
+      )}
       <form className="card flex flex-col gap-3" onSubmit={handleSubmit}>
         <h2 className="mb-1">Anmelden</h2>
-        {error && (
-          <p role="alert" className="text-sm text-danger">
-            {error}
-          </p>
-        )}
         <label className="flex flex-col gap-1">
           Benutzername
           <input

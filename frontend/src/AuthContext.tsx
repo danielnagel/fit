@@ -11,6 +11,8 @@ type AuthContextValue = {
   // Liefert null bei Erfolg, sonst eine anzeigbare Fehlermeldung.
   login: (username: string, password: string) => Promise<string | null>;
   logout: () => Promise<void>;
+  // Nur im Demo-Modus: legt einen eigenen Demo-Benutzer mit Beispieldaten an und meldet ihn an.
+  startDemo: () => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -55,12 +57,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   }, []);
 
+  const startDemo = useCallback(async () => {
+    let res: Response;
+    try {
+      res = await fetch('/api/auth/demo', { method: 'POST' });
+    } catch {
+      return 'Server nicht erreichbar';
+    }
+    if (res.status === 429) return 'Zu viele Demo-Zugänge von dieser Adresse – bitte später erneut probieren';
+    if (!res.ok) return `Fehler (${res.status})`;
+    setState({ status: 'user', user: await res.json() });
+    return null;
+  }, []);
+
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined);
     setState({ status: 'anonymous' });
   }, []);
 
-  const value = useMemo(() => ({ state, login, logout }), [state, login, logout]);
+  const value = useMemo(() => ({ state, login, logout, startDemo }), [state, login, logout, startDemo]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

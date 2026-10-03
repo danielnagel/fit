@@ -4,6 +4,7 @@ import { pool } from '../db.js';
 import { passwords } from '../auth/password.js';
 import { AUTH_COOKIE, SESSION_MAX_AGE_MS, cookieOptions, signToken } from '../auth/jwt.js';
 import { currentUser, requireAuth } from '../middleware/requireAuth.js';
+import { DEMO_TTL_MS, createDemoUser, isDemoMode } from '../demo.js';
 
 export const authRouter = Router();
 
@@ -15,6 +16,31 @@ const loginRateLimiter = rateLimit({
   message: { error: 'rate_limited' },
   // Vitest setzt NODE_ENV=test; die Tests loggen sich weit oefter als 10-mal ein.
   skip: () => process.env.NODE_ENV === 'test',
+});
+
+// Eigener Zaehler: legt pro Aufruf einen Benutzer samt Beispieldaten an.
+const demoRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'rate_limited' },
+  skip: () => process.env.NODE_ENV === 'test',
+});
+
+// Oeffentlich: die Login-Seite blendet damit den Demo-Einstieg ein.
+authRouter.get('/config', (_req, res) => {
+  res.json({ demo: isDemoMode(), demo_ttl_minutes: DEMO_TTL_MS / 60000 });
+});
+
+authRouter.post('/demo', demoRateLimiter, async (_req, res) => {
+  if (!isDemoMode()) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  const user = await createDemoUser();
+  res.cookie(AUTH_COOKIE, signToken(user, DEMO_TTL_MS), { ...cookieOptions(), maxAge: DEMO_TTL_MS });
+  res.status(201).json(user);
 });
 
 authRouter.post('/login', loginRateLimiter, async (req, res) => {

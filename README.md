@@ -122,6 +122,7 @@ Umgebungsvariablen des Backends:
 | `NODE_ENV=production` | hinter TLS | Setzt das `Secure`-Flag am Login-Cookie. Über plain http verwirft der Browser das Cookie dann. |
 | `TRUST_PROXY_HOPS` | hinter Proxies | Anzahl Reverse-Proxies vor dem Backend (z. B. `2` für TLS-Proxy + Frontend-nginx), damit das Login-Rate-Limit die echte Client-IP sieht. Default `0`. |
 | `PORT` | nein | Default `3000` |
+| `MODE=demo` | nein | Demo-Modus, siehe unten |
 
 Umgebungsvariablen des Frontends:
 
@@ -130,6 +131,10 @@ Umgebungsvariablen des Frontends:
 | `BACKEND_HOST` | Hostname des Backends, an den `/api` weitergeleitet wird (Port 3000). Default `fit-backend`. |
 
 Benutzer werden auch im Deployment per CLI im Backend-Container angelegt (`npm run user:create` usw., siehe [Benutzer verwalten](#benutzer-verwalten)).
+
+### Demo-Modus
+
+Mit `MODE=demo` zeigt die Login-Seite zusätzlich „Demo ausprobieren“. Jeder Klick legt einen eigenen Benutzer `demo-xxxxxx` mit Beispieldaten an: Standard-Trainingsmethoden, sechs Übungen, ein Plan mit zwei Trainingstagen, drei abgeschlossene Wochen Historie und eine laufende Woche. Besucher sehen sich gegenseitig nicht. Nach einer Stunde läuft der Zugang ab; das Backend löscht abgelaufene Demo-Benutzer samt Daten alle fünf Minuten. Pro IP sind 20 Demo-Zugänge pro Stunde erlaubt. Für eine öffentliche Demo eine eigene Instanz mit eigener Datenbank verwenden.
 
 ## Dependencies aktuell halten
 
