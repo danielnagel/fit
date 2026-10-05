@@ -20,7 +20,7 @@ services:
       - internal
 
   fit-backend:
-    # Prod-Image (Default-Target), damit e2e genau das testet, was deployt wird.
+    # Prod image (default target) so e2e tests exactly what gets deployed.
     build:
       context: .
       dockerfile: backend/Dockerfile

@@ -29,7 +29,7 @@ jobs:
       - name: Typecheck and build
         run: npx tsc --noEmit -p backend && npm run build --workspace=backend
 
-      # "pretest" startet die Test-DB aus docker-compose.test.yml.
+      # "pretest" starts the test DB from docker-compose.test.yml.
       - name: Run backend tests
         run: npm test --workspace=backend
 
@@ -75,7 +75,7 @@ jobs:
         working-directory: e2e
         run: npx playwright install --with-deps chromium
 
-      # global-setup.ts baut und startet den Stack aus docker-compose.test.yml (Prod-Images).
+      # global-setup.ts builds and starts the stack from docker-compose.test.yml (prod images).
       - name: Run Playwright E2E suite
         run: npm run test:e2e
 

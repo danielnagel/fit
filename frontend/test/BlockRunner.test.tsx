@@ -22,7 +22,7 @@ describe('BlockRunner', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
   });
 
   it('dispatches fixed-work-rest blocks to the tap-counter UI', () => {
@@ -63,7 +63,7 @@ describe('BlockRunner', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Übung beenden' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish exercise' })).toBeInTheDocument();
   });
 
   it('dispatches self-paced blocks with more than one exercise to the circuit UI', () => {
@@ -82,7 +82,7 @@ describe('BlockRunner', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Zirkel beenden' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish circuit' })).toBeInTheDocument();
   });
 
   it('renders nothing once every unit in the block is done', () => {
@@ -124,6 +124,6 @@ describe('BlockRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Übung 2')).toBeInTheDocument();
+    expect(screen.getByText('Exercise 2')).toBeInTheDocument();
   });
 });

@@ -13,8 +13,8 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.stubGlobal('fetch', fetchMock);
   fetchMock.mockReset();
-  // Fallback fuer Aufrufe, die ein Test nicht gezielt mockt (z.B. der Timer-Anker-PUT,
-  // den FixedWindowUnitRunner beim Mount abschickt).
+  // Fallback for calls a test doesn't mock specifically (e.g. the timer anchor PUT
+  // that FixedWindowUnitRunner sends on mount).
   fetchMock.mockResolvedValue(jsonResponse({}));
 });
 
@@ -26,7 +26,7 @@ afterEach(() => {
 describe('SessionRunner', () => {
   it('loads the session and renders the active block', async () => {
     const session = sessionFixture({
-      day_snapshot: { name: 'Push Day', blocks: [blockFixture({ training_method: methodFixture({ name: 'Intervallsatz' }) })] },
+      day_snapshot: { name: 'Push Day', blocks: [blockFixture({ training_method: methodFixture({ name: 'Interval set' }) })] },
     });
     fetchMock.mockResolvedValueOnce(jsonResponse(session));
 
@@ -34,7 +34,7 @@ describe('SessionRunner', () => {
     await act(async () => {});
 
     expect(screen.getByText('Push Day')).toBeInTheDocument();
-    expect(screen.getByText(/Block 1\/1 \(Intervallsatz\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Block 1\/1 \(Interval set\)/)).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(`/api/sessions/${session.id}`);
   });
 
@@ -44,7 +44,7 @@ describe('SessionRunner', () => {
         name: 'Push Day',
         blocks: [
           blockFixture({
-            training_method: methodFixture({ name: 'Intervallsatz', scope: 'single', stop_condition: 'fixed-count', rounds: 1 }),
+            training_method: methodFixture({ name: 'Interval set', scope: 'single', stop_condition: 'fixed-count', rounds: 1 }),
             exercises: [exerciseFixture(1), exerciseFixture(2), exerciseFixture(3), exerciseFixture(4)],
           }),
         ],
@@ -55,29 +55,29 @@ describe('SessionRunner', () => {
     render(<SessionRunner sessionId={session.id} onFinished={vi.fn()} />);
     await act(async () => {});
 
-    expect(screen.getByText(/Übung 1\/4/)).toBeInTheDocument();
+    expect(screen.getByText(/exercise 1\/4/)).toBeInTheDocument();
   });
 
   it('shows the fetch error message when loading fails', async () => {
     fetchMock.mockReset();
-    fetchMock.mockRejectedValueOnce(new Error('Netzwerkfehler'));
+    fetchMock.mockRejectedValueOnce(new Error('Network error'));
 
     render(<SessionRunner sessionId={1} onFinished={vi.fn()} />);
     await act(async () => {});
 
-    expect(screen.getByText(/Fehler: Error: Netzwerkfehler/)).toBeInTheDocument();
+    expect(screen.getByText(/Error: Error: Network error/)).toBeInTheDocument();
   });
 
   it('automatically completes the session once every block is done', async () => {
     const onFinished = vi.fn();
-    const session = sessionFixture({ day_snapshot: { name: 'Leerer Tag', blocks: [] } });
+    const session = sessionFixture({ day_snapshot: { name: 'Empty day', blocks: [] } });
     fetchMock.mockResolvedValueOnce(jsonResponse(session));
     fetchMock.mockResolvedValueOnce(jsonResponse({ ...session, status: 'completed' }));
 
     render(<SessionRunner sessionId={session.id} onFinished={onFinished} />);
     await act(async () => {});
 
-    expect(screen.getByText('Training abgeschlossen.')).toBeInTheDocument();
+    expect(screen.getByText('Training completed.')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/sessions/${session.id}`,
       expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ status: 'completed' }) }),
@@ -88,7 +88,7 @@ describe('SessionRunner', () => {
   it('aborts the session after confirming the dialog', async () => {
     const onFinished = vi.fn();
     const session = sessionFixture({
-      day_snapshot: { name: 'Push Day', blocks: [blockFixture({ training_method: methodFixture({ name: 'Intervallsatz' }) })] },
+      day_snapshot: { name: 'Push Day', blocks: [blockFixture({ training_method: methodFixture({ name: 'Interval set' }) })] },
     });
     fetchMock.mockResolvedValueOnce(jsonResponse(session));
     render(<SessionRunner sessionId={session.id} onFinished={onFinished} />);
@@ -97,10 +97,9 @@ describe('SessionRunner', () => {
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ ...session, status: 'aborted' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Training abbrechen' }));
-    const confirmButtons = screen.getAllByRole('button', { name: 'Abbrechen' });
+    fireEvent.click(screen.getByRole('button', { name: 'Abort training' }));
     await act(async () => {
-      fireEvent.click(confirmButtons[confirmButtons.length - 1]);
+      fireEvent.click(screen.getByRole('button', { name: 'Abort' }));
     });
 
     expect(fetchMock).toHaveBeenCalledWith(

@@ -13,7 +13,7 @@ function exercise(id: number, planBlockExerciseId?: number): SnapshotExercise {
   return {
     exercise_id: id,
     plan_block_exercise_id: planBlockExerciseId,
-    exercise_name: `Übung ${id}`,
+    exercise_name: `Exercise ${id}`,
     description: null,
     reps_min: null,
     reps_max: null,
@@ -136,23 +136,23 @@ describe('isBlockDone', () => {
     expect(isBlockDone(b, [loggedSet(1, 0), loggedSet(2, 0)], [])).toBe(true);
   });
 
-  // Regression fuer den gemeldeten Bug: "Tag 3 Ziehen" verschraenkt Türziehen (id 5) in allen drei
-  // Supersatz-Paaren. Ohne plan_block_exercise_id zaehlten Saetze aus Paar 1/2 faelschlich als
-  // Fortschritt fuer Paar 3, das dadurch schon "fertig" war, bevor es begonnen wurde.
+  // Regression for the reported bug: "Day 3 pull" interlinks the door pull (id 5) in all three
+  // superset pairs. Without plan_block_exercise_id, sets from pair 1/2 were wrongly counted as
+  // progress for pair 3, which was therefore already "done" before it was started.
   it('does not let an exercise reused across pairs falsely finish a later pair', () => {
     const b = block({
       training_method: method({ scope: 'pair', stop_condition: 'fixed-count', rounds: 2 }),
       exercises: [
-        exercise(16, 282), // Klimmzug
-        exercise(5, 283), // Türziehen (Paar 1)
-        exercise(5, 284), // Türziehen (Paar 2)
-        exercise(3, 285), // Umgekehrtes Bankdrücken (Paar 2)
-        exercise(3, 286), // Umgekehrtes Bankdrücken (Paar 3)
-        exercise(5, 287), // Türziehen (Paar 3)
+        exercise(16, 282), // pull-up
+        exercise(5, 283), // door pull (pair 1)
+        exercise(5, 284), // door pull (pair 2)
+        exercise(3, 285), // inverted row (pair 2)
+        exercise(3, 286), // inverted row (pair 3)
+        exercise(5, 287), // door pull (pair 3)
       ],
     });
-    // Paar 1 (Klimmzug/Türziehen-283) und Paar 2 (Türziehen-284/Bankdrücken-285) je 2 Runden
-    // vollstaendig geloggt -- Paar 3 wurde noch nie ausgefuehrt.
+    // Pair 1 (pull-up/door pull-283) and pair 2 (door pull-284/inverted row-285) fully logged with
+    // 2 rounds each -- pair 3 was never done.
     const logged = [
       loggedSet(16, 0, { plan_block_exercise_id: 282 }),
       loggedSet(5, 0, { plan_block_exercise_id: 283 }),
@@ -172,13 +172,13 @@ describe('isBlockDone', () => {
     expect(activeUnitIndex).toBe(2);
   });
 
-  // Gleicher Bug wie oben, aber fuer den "manuell beenden"-Pfad (all-exercises-done): dieselbe
-  // Uebung taucht als zwei Varianten (nur ueber die Note im Plan-Slot unterschieden) im Block auf.
-  // Finishen der ersten Variante darf die zweite nicht automatisch mit abschliessen.
+  // Same bug as above, but for the "finish manually" path (all-exercises-done): the same
+  // exercise appears in the block as two variants (only distinguished by the note in the plan slot).
+  // Finishing the first variant must not automatically complete the second one as well.
   it('does not let finishing one slot of a reused exercise finish another slot (all-exercises-done)', () => {
     const b = block({
       training_method: method({ scope: 'single', stop_condition: 'all-exercises-done' }),
-      exercises: [exercise(5, 283), exercise(5, 287)], // Türziehen leicht / schwer
+      exercises: [exercise(5, 283), exercise(5, 287)], // door pull light / heavy
     });
 
     expect(isBlockDone(b, [], [finishedExercise(5, 283)])).toBe(false);

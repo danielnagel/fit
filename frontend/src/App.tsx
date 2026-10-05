@@ -10,8 +10,8 @@ import TrainingMethods from './TrainingMethods';
 
 type LoginRedirectState = { from?: string } | null;
 
-// Nach dem (Re-)Login zurueck auf die urspruengliche URL, z. B. eine laufende Session -- deren
-// Zustand liegt serverseitig, ein Reload der Seite reicht zum Fortsetzen.
+// After (re-)login go back to the original URL, e.g. a running session -- its state lives on the
+// server, reloading the page is enough to resume it.
 function AfterLogin() {
   const from = (useLocation().state as LoginRedirectState)?.from;
   return <Navigate to={from && from !== '/login' ? from : '/training'} replace />;

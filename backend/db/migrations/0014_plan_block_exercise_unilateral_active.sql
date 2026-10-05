@@ -1,6 +1,6 @@
--- Ob eine einseitige Uebung (exercises.is_unilateral) in einem konkreten Satz eines Plans
--- tatsaechlich seitengetrennt geloggt werden soll, ist zu speziell fuer die Uebung selbst und
--- wird daher pro plan_block_exercises-Eintrag aktiviert. Die App-Validierung (siehe plans.ts)
--- laesst das nur zu, wenn die Uebung is_unilateral ist und der Block eine Trainingsmethode mit
--- timing_family = 'fixed-window-remainder' nutzt (aktuell Intervallsatz und Supersatz).
+-- Whether a unilateral exercise (exercises.is_unilateral) should actually be logged per side
+-- in a specific set of a plan is too specific for the exercise itself and is therefore
+-- enabled per plan_block_exercises entry. The app validation (see plans.ts) only allows
+-- it if the exercise is_unilateral and the block uses a training method with
+-- timing_family = 'fixed-window-remainder' (currently interval set and superset).
 ALTER TABLE plan_block_exercises ADD COLUMN is_unilateral_active BOOLEAN NOT NULL DEFAULT false;

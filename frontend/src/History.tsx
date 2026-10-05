@@ -38,9 +38,9 @@ type LoggedSetDetail = {
 type SessionDetail = SessionListItem & { logged_sets: LoggedSetDetail[] };
 
 const STATUS_LABELS: Record<SessionListItem['status'], string> = {
-  in_progress: 'Läuft',
-  completed: 'Abgeschlossen',
-  aborted: 'Abgebrochen',
+  in_progress: 'In progress',
+  completed: 'Completed',
+  aborted: 'Aborted',
 };
 
 function groupSessionsByWeek(sessions: SessionListItem[]): SessionWeekGroup[] {
@@ -104,7 +104,7 @@ export default function History() {
       .catch((err) => setError(String(err)));
   }, [exerciseId]);
 
-  const exerciseName = (id: number) => exercises.find((ex) => ex.id === id)?.name ?? `Übung #${id}`;
+  const exerciseName = (id: number) => exercises.find((ex) => ex.id === id)?.name ?? `Exercise #${id}`;
 
   const toggleExpandWeek = (id: number) => {
     setExpandedWeekId((prev) => (prev === id ? null : id));
@@ -134,7 +134,7 @@ export default function History() {
     const res = await apiFetch(`/api/sessions/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     if (expandedId === pendingDeleteId) setExpandedId(null);
@@ -152,7 +152,7 @@ export default function History() {
     const res = await apiFetch(`/api/sessions/${sessionId}/logged-sets/${setId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     const detail = await apiFetch(`/api/sessions/${sessionId}`).then((r) => r.json());
@@ -162,12 +162,12 @@ export default function History() {
   return (
     <div className="flex flex-col gap-6">
       <section className="card">
-        <h2 className="mb-4">Fortschritt</h2>
-        {error && <p className="mb-3 text-sm text-danger">Fehler: {error}</p>}
+        <h2 className="mb-4">Progress</h2>
+        {error && <p className="mb-3 text-sm text-danger">Error: {error}</p>}
         <label className="flex items-center gap-2">
-          Übung{' '}
+          Exercise{' '}
           <select className="field" value={exerciseId} onChange={(e) => setExerciseId(e.target.value)}>
-            <option value="">Übung wählen...</option>
+            <option value="">Choose exercise...</option>
             {exercises.map((ex) => (
               <option key={ex.id} value={ex.id}>
                 {ex.name}
@@ -179,9 +179,9 @@ export default function History() {
       </section>
 
       <section className="card">
-        <h2 className="mb-4">Trainingshistorie</h2>
+        <h2 className="mb-4">Training history</h2>
         {sessions.length === 0 ? (
-          <p className="hint">Noch keine Trainings durchgeführt.</p>
+          <p className="hint">No trainings done yet.</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {groupSessionsByWeek(sessions).map((group) => (
@@ -189,10 +189,10 @@ export default function History() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h3>
                     {group.plan_name}{' '}
-                    <span className="hint font-normal">({new Date(group.week_started_at).toLocaleDateString('de-DE')})</span>
+                    <span className="hint font-normal">({new Date(group.week_started_at).toLocaleDateString('en-GB')})</span>
                   </h3>
                   <button type="button" className="btn ml-auto" onClick={() => toggleExpandWeek(group.plan_week_id)}>
-                    {expandedWeekId === group.plan_week_id ? 'Woche ausblenden' : 'Woche anzeigen'}
+                    {expandedWeekId === group.plan_week_id ? 'Hide week' : 'Show week'}
                   </button>
                 </div>
                 {expandedWeekId === group.plan_week_id && (
@@ -200,7 +200,7 @@ export default function History() {
                     {group.sessions.map((s) => (
                       <li key={s.id} className="rounded-xl border border-edge bg-surface-2 px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="hint">{new Date(s.started_at).toLocaleDateString('de-DE')}</span>
+                          <span className="hint">{new Date(s.started_at).toLocaleDateString('en-GB')}</span>
                           <strong className="text-fg">{s.day_snapshot.name}</strong>
                           {s.day_snapshot.blocks && s.day_snapshot.blocks.length > 0 && (
                             <span className="hint">({s.day_snapshot.blocks.map((b) => b.training_method.name).join(', ')})</span>
@@ -210,34 +210,34 @@ export default function History() {
                           </span>
                           <div className="ml-auto flex gap-2">
                             <button type="button" className="btn" onClick={() => toggleExpand(s.id)}>
-                              {expandedId === s.id ? 'Details ausblenden' : 'Details'}
+                              {expandedId === s.id ? 'Hide details' : 'Details'}
                             </button>
                             {s.status === 'in_progress' && (
                               <button type="button" className="btn" onClick={() => navigate(`/training?session=${s.id}`)}>
-                                Fortsetzen
+                                Resume
                               </button>
                             )}
                             <button type="button" className="btn-danger" onClick={() => requestDelete(s.id)}>
-                              Löschen
+                              Delete
                             </button>
                           </div>
                         </div>
                         {expandedId === s.id &&
                           (!details[s.id] ? (
-                            <p className="hint mt-2">Lade Details...</p>
+                            <p className="hint mt-2">Loading details...</p>
                           ) : details[s.id].logged_sets.length === 0 ? (
-                            <p className="hint mt-2">Keine erfassten Sätze.</p>
+                            <p className="hint mt-2">No logged sets.</p>
                           ) : (
                             <div className="mt-3 overflow-x-auto rounded-lg border border-edge">
                               <table className="w-full border-collapse text-sm">
                                 <thead>
                                   <tr className="bg-surface-3 text-left text-fg-muted">
-                                    <th className="px-3 py-2 font-medium">Übung</th>
-                                    <th className="px-3 py-2 font-medium">Einheit</th>
-                                    <th className="px-3 py-2 font-medium">Wiederholungen</th>
-                                    <th className="px-3 py-2 font-medium">Seite</th>
-                                    <th className="px-3 py-2 font-medium">Satz-Zeit</th>
-                                    <th className="px-3 py-2 font-medium">Uhrzeit</th>
+                                    <th className="px-3 py-2 font-medium">Exercise</th>
+                                    <th className="px-3 py-2 font-medium">Unit</th>
+                                    <th className="px-3 py-2 font-medium">Reps</th>
+                                    <th className="px-3 py-2 font-medium">Side</th>
+                                    <th className="px-3 py-2 font-medium">Set time</th>
+                                    <th className="px-3 py-2 font-medium">Time</th>
                                     <th className="px-3 py-2"></th>
                                   </tr>
                                 </thead>
@@ -247,12 +247,12 @@ export default function History() {
                                       <td className="px-3 py-2">{exerciseName(set.exercise_id)}</td>
                                       <td className="px-3 py-2">{set.unit_index + 1}</td>
                                       <td className="px-3 py-2">{set.reps ?? '–'}</td>
-                                      <td className="px-3 py-2">{set.side === 'left' ? 'links' : set.side === 'right' ? 'rechts' : '–'}</td>
+                                      <td className="px-3 py-2">{set.side === 'left' ? 'left' : set.side === 'right' ? 'right' : '–'}</td>
                                       <td className="px-3 py-2">{set.completed_seconds != null ? formatMmSs(set.completed_seconds) : '–'}</td>
-                                      <td className="px-3 py-2">{new Date(set.performed_at).toLocaleTimeString('de-DE')}</td>
+                                      <td className="px-3 py-2">{new Date(set.performed_at).toLocaleTimeString('en-GB')}</td>
                                       <td className="px-3 py-2">
                                         <button type="button" className="btn-danger" onClick={() => requestDeleteSet(s.id, set.id)}>
-                                          Löschen
+                                          Delete
                                         </button>
                                       </td>
                                     </tr>
@@ -273,12 +273,12 @@ export default function History() {
 
       <ConfirmDialog
         ref={deleteDialogRef}
-        message="Training endgültig löschen? Dies kann nicht rückgängig gemacht werden."
+        message="Permanently delete this training? This cannot be undone."
         onConfirm={handleDelete}
       />
       <ConfirmDialog
         ref={deleteSetDialogRef}
-        message="Übung aus der Historie löschen? Dies kann nicht rückgängig gemacht werden."
+        message="Delete this set from the history? This cannot be undone."
         onConfirm={handleDeleteSet}
       />
     </div>

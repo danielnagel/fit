@@ -17,23 +17,23 @@ describe('Countdown', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it('pause/Weiter toggles the running state', () => {
+  it('pause/Resume toggles the running state', () => {
     render(<Countdown seconds={5} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
     act(() => vi.advanceTimersByTime(2000));
     expect(screen.getByText('0:05')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Weiter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
     act(() => vi.advanceTimersByTime(1000));
     expect(screen.getByText('0:04')).toBeInTheDocument();
   });
 
   it('shows a skip button with the given label and jumps to zero', () => {
     const onComplete = vi.fn();
-    render(<Countdown seconds={30} onComplete={onComplete} skipLabel="Pause abbrechen" />);
+    render(<Countdown seconds={30} onComplete={onComplete} skipLabel="Skip rest" />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Pause abbrechen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip rest' }));
 
     expect(screen.getByText('0:00')).toBeInTheDocument();
   });
@@ -44,10 +44,10 @@ describe('Countdown', () => {
       <Countdown seconds={60} onMarkComplete={onMarkComplete} completedAfterSeconds={null} />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Abgeschlossen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Completed' }));
     expect(onMarkComplete).toHaveBeenCalledTimes(1);
 
     rerender(<Countdown seconds={60} onMarkComplete={onMarkComplete} completedAfterSeconds={12} />);
-    expect(screen.getByText('Satz abgeschlossen nach 0:12')).toBeInTheDocument();
+    expect(screen.getByText('Set completed after 0:12')).toBeInTheDocument();
   });
 });

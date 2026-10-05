@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 export type TimerAnchor = { phase_key: string; duration_seconds: number; started_at: string };
 
-// Ermittelt die seit dem Anker verstrichene Zeit, sofern er zur aktuellen Phase passt.
-// Dient nur der ungefaehren Wiederherstellung nach Reload/Geraetewechsel, nicht der Sekundengenauigkeit.
+// Determines the time elapsed since the anchor, as long as it matches the current phase.
+// Only serves a rough restore after reload/device switch, not second-level accuracy.
 export function anchorElapsedSeconds(anchor: TimerAnchor | undefined, phaseKey: string): number | null {
   if (!anchor || anchor.phase_key !== phaseKey) return null;
   return Math.max(0, Math.floor((Date.now() - new Date(anchor.started_at).getTime()) / 1000));

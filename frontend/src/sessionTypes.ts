@@ -3,10 +3,10 @@ import type { TimerAnchor } from './useTimer';
 
 export type SnapshotExercise = {
   exercise_id: number;
-  // Identifiziert den konkreten Plan-Eintrag (Slot) innerhalb des Blocks -- im Unterschied zu
-  // exercise_id, das sich wiederholen kann, wenn dieselbe Uebung in mehreren Paaren desselben
-  // Blocks vorkommt (z.B. "leicht"/"schwer"-Varianten). Bei alten Sessions (vor dieser
-  // Erweiterung eingefroren) fehlt das Feld -- siehe blockRunnerUtils fuer den Fallback.
+  // Identifies the concrete plan entry (slot) within the block -- unlike
+  // exercise_id, which can repeat when the same exercise appears in several pairs of the same
+  // block (e.g. "light"/"heavy" variants). Old sessions (frozen before this
+  // extension) lack the field -- see blockRunnerUtils for the fallback.
   plan_block_exercise_id?: number;
   exercise_name: string;
   description: string | null;

@@ -49,39 +49,39 @@ describe('user:create', () => {
   it('creates a user who can log in and seeds the default training methods', async () => {
     const { io, out } = fakeIo();
 
-    expect(await createUser(io, { username: 'anna', password: 'geheim123', seed: true })).toBe(0);
+    expect(await createUser(io, { username: 'anna', password: 'secret123', seed: true })).toBe(0);
 
-    expect(out()).toMatch(/Benutzer angelegt: anna/);
-    expect((await login('anna', 'geheim123')).status).toBe(200);
+    expect(out()).toMatch(/User created: anna/);
+    expect((await login('anna', 'secret123')).status).toBe(200);
     const { rows } = await pool.query('SELECT name FROM training_methods WHERE user_id = $1 ORDER BY name', [
       await userId('anna'),
     ]);
     expect(rows.map((r) => r.name)).toEqual([
-      'Hochintensitaetssatz',
-      'Intervallsatz',
-      'Stufensatz',
-      'Supersatz',
-      'Zirkel-Intervall',
+      'Circuit interval',
+      'High-intensity set',
+      'Interval set',
+      'Ladder set',
+      'Superset',
     ]);
   });
 
   it('skips the seed with --no-seed', async () => {
-    await createUser(fakeIo().io, { username: 'anna', password: 'geheim123', seed: false });
+    await createUser(fakeIo().io, { username: 'anna', password: 'secret123', seed: false });
 
     expect((await countOwned((await userId('anna'))!)).training_methods).toBe(0);
   });
 
   it('prompts interactively for username and password', async () => {
-    const { io } = fakeIo({ isTTY: true, answers: ['anna', 'geheim123', 'geheim123'] });
+    const { io } = fakeIo({ isTTY: true, answers: ['anna', 'secret123', 'secret123'] });
 
     expect(await createUser(io, { seed: false })).toBe(0);
-    expect((await login('anna', 'geheim123')).status).toBe(200);
+    expect((await login('anna', 'secret123')).status).toBe(200);
   });
 
   it.each([
-    ['a too short password', { username: 'anna', password: 'kurz' }, /mindestens 8 Zeichen/],
-    ['an invalid username', { username: 'an na', password: 'geheim123' }, /Ungueltiger Benutzername/],
-    ['missing arguments without a terminal', {}, /Aufruf/],
+    ['a too short password', { username: 'anna', password: 'short' }, /at least 8 characters/],
+    ['an invalid username', { username: 'an na', password: 'secret123' }, /Invalid username/],
+    ['missing arguments without a terminal', {}, /Usage/],
   ])('rejects %s', async (_label, args, message) => {
     const { io, err } = fakeIo();
 
@@ -91,18 +91,18 @@ describe('user:create', () => {
   });
 
   it('rejects mismatching interactive passwords', async () => {
-    const { io, err } = fakeIo({ isTTY: true, answers: ['anna', 'geheim123', 'anders123'] });
+    const { io, err } = fakeIo({ isTTY: true, answers: ['anna', 'secret123', 'other123'] });
 
     expect(await createUser(io, { seed: true })).toBe(1);
-    expect(err()).toMatch(/stimmen nicht/);
+    expect(err()).toMatch(/do not match/);
   });
 
   it('rejects an existing username', async () => {
     await createUserFixture('anna');
     const { io, err } = fakeIo();
 
-    expect(await createUser(io, { username: 'anna', password: 'geheim123', seed: true })).toBe(1);
-    expect(err()).toMatch(/bereits/);
+    expect(await createUser(io, { username: 'anna', password: 'secret123', seed: true })).toBe(1);
+    expect(err()).toMatch(/already exists/);
   });
 });
 
@@ -114,8 +114,8 @@ describe('user:list', () => {
 
     expect(await listUsers(io)).toBe(0);
 
-    expect(out()).toMatch(/Default \(ohne Login\) {2}\(id 1,/);
-    expect(out()).toMatch(/anna .*letzter Login 20\d\d.*1 Plaene, 1 Uebungen, 1 Sessions/);
+    expect(out()).toMatch(/Default \(no login\) {2}\(id 1,/);
+    expect(out()).toMatch(/anna .*last login 20\d\d.*1 plans, 1 exercises, 1 sessions/);
   });
 });
 
@@ -123,16 +123,16 @@ describe('user:set-password', () => {
   it('replaces the password', async () => {
     await createUserFixture('anna');
 
-    expect(await setPassword(fakeIo().io, { username: 'anna', password: 'neues-passwort' })).toBe(0);
+    expect(await setPassword(fakeIo().io, { username: 'anna', password: 'new-password' })).toBe(0);
 
-    expect((await login('anna', 'neues-passwort')).status).toBe(200);
+    expect((await login('anna', 'new-password')).status).toBe(200);
   });
 
   it('refuses the legacy default user', async () => {
     const { io, err } = fakeIo();
 
-    expect(await setPassword(io, { username: 'Default', password: 'geheim123' })).toBe(1);
-    expect(err()).toMatch(/Default-User/);
+    expect(await setPassword(io, { username: 'Default', password: 'secret123' })).toBe(1);
+    expect(err()).toMatch(/default user/);
   });
 });
 
@@ -161,18 +161,18 @@ describe('user:delete', () => {
     expect(await userId('anna')).toBeDefined();
   });
 
-  it('aborts unless the confirmation is "ja"', async () => {
+  it('aborts unless the confirmation is "yes"', async () => {
     await createUserFixture('anna');
 
-    expect(await deleteUser(fakeIo({ isTTY: true, answers: ['nein'] }).io, { ref: 'anna', yes: false })).toBe(1);
+    expect(await deleteUser(fakeIo({ isTTY: true, answers: ['no'] }).io, { ref: 'anna', yes: false })).toBe(1);
     expect(await userId('anna')).toBeDefined();
   });
 });
 
 describe('user:assign-data', () => {
   it('moves all data from the legacy default user to a new user', async () => {
-    // Bestand wie nach Migration 0017: alles gehoert dem Default-User (id 1).
-    const source = await createUserFixture('quelle');
+    // State as after migration 0017: everything belongs to the default user (id 1).
+    const source = await createUserFixture('source');
     const data = await createFullData(await loginAgent(app, source.username));
     for (const table of ['plans', 'exercises', 'training_methods', 'plan_weeks']) {
       await pool.query(`UPDATE ${table} SET user_id = 1`);
@@ -202,8 +202,8 @@ describe('user:assign-data', () => {
 
     expect(await assignData(io, { from: 'anna', to: 'bert' })).toBe(1);
 
-    expect(err()).toMatch(/aktive Woche/);
-    expect(err()).toMatch(/Uebung "Kniebeuge"/);
+    expect(err()).toMatch(/active week/);
+    expect(err()).toMatch(/Exercise "Squat"/);
     expect({ anna: await countOwned(anna.id), bert: await countOwned(bert.id) }).toEqual(before);
   });
 
@@ -222,7 +222,7 @@ describe('user:assign-data', () => {
     await createUserFixture('anna');
 
     expect(await assignData(fakeIo().io, { from: 'anna', to: 'anna' })).toBe(1);
-    expect(await assignData(fakeIo().io, { from: 'anna', to: 'niemand' })).toBe(1);
+    expect(await assignData(fakeIo().io, { from: 'anna', to: 'nobody' })).toBe(1);
   });
 });
 
@@ -238,10 +238,10 @@ describe('CLI entry point', () => {
   }
 
   it('runs a command as a real process', async () => {
-    const result = runCli(['create', 'anna', 'geheim123', '--no-seed']);
+    const result = runCli(['create', 'anna', 'secret123', '--no-seed']);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toMatch(/Benutzer angelegt: anna/);
+    expect(result.stdout).toMatch(/User created: anna/);
     expect(await userId('anna')).toBeDefined();
   });
 

@@ -9,7 +9,7 @@ import type {
 export function exerciseFixture(id: number, overrides: Partial<SnapshotExercise> = {}): SnapshotExercise {
   return {
     exercise_id: id,
-    exercise_name: `Übung ${id}`,
+    exercise_name: `Exercise ${id}`,
     description: null,
     reps_min: null,
     reps_max: null,
@@ -21,7 +21,7 @@ export function exerciseFixture(id: number, overrides: Partial<SnapshotExercise>
 
 export function methodFixture(overrides: Partial<TrainingMethodSnapshot> = {}): TrainingMethodSnapshot {
   return {
-    name: 'Testmethode',
+    name: 'Test method',
     scope: 'single',
     timing_family: 'fixed-window-remainder',
     window_seconds: 60,
@@ -58,7 +58,7 @@ export function sessionFixture(overrides: Partial<SessionDetail> = {}): SessionD
     id: 1,
     plan_week_id: 1,
     plan_day_id: 1,
-    day_snapshot: { name: 'Tag 1', blocks: [blockFixture()] },
+    day_snapshot: { name: 'Day 1', blocks: [blockFixture()] },
     status: 'in_progress',
     started_at: '2026-01-01T00:00:00Z',
     completed_at: null,

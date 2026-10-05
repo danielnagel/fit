@@ -1,6 +1,6 @@
--- Woche wird vom System getrackt (Start/Ende-Zeitstempel), statt dass der Nutzer eine Wochennummer eintippt.
--- Es kann global immer nur eine aktive Woche geben (unabhaengig vom Plan) -- der laufende Plan muss erst
--- beendet werden, bevor eine neue Woche (auch fuer einen anderen Plan) gestartet werden kann.
+-- The week is tracked by the system (start/end timestamps) instead of the user typing a week number.
+-- There can only ever be one active week globally (regardless of plan) -- the running plan has to be
+-- ended before a new week (even for another plan) can be started. (Per user since 0017.)
 DROP TABLE logged_sets;
 DROP TABLE training_sessions;
 

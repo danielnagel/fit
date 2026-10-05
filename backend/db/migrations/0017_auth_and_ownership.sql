@@ -1,8 +1,8 @@
--- Benutzerverwaltung: Login-Felder an users, Besitz (user_id) an allen Wurzel-Tabellen.
--- Alle bestehenden Daten gehoeren danach dem Default-User (id=1). Dieser bekommt keine
--- Credentials und ist damit nicht einloggbar; per CLI (user:assign-data) werden seine Daten
--- auf einen echten Benutzer uebertragen. Kindtabellen (plan_days, plan_blocks, training_sessions,
--- logged_sets, ...) haengen per FK an plans/plan_weeks, ihr Besitz ist darueber ableitbar.
+-- User management: login fields on users, ownership (user_id) on all root tables.
+-- Afterwards all existing data belongs to the default user (id=1). It gets no
+-- credentials and therefore can't log in; the CLI (user:assign-data) moves its data
+-- to a real user. Child tables (plan_days, plan_blocks, training_sessions,
+-- logged_sets, ...) hang off plans/plan_weeks via FK, their ownership derives from those.
 ALTER TABLE users ADD COLUMN username TEXT UNIQUE;
 ALTER TABLE users ADD COLUMN password_hash TEXT;
 ALTER TABLE users ADD COLUMN last_login_at TIMESTAMPTZ;
@@ -11,8 +11,8 @@ ALTER TABLE users ADD CONSTRAINT users_login_complete
 
 ALTER TABLE exercises ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
 ALTER TABLE training_methods ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
--- Denormalisiert (eigentlich ueber plans ableitbar), damit der Partial-Unique-Index
--- "eine aktive Woche pro User" unten moeglich ist.
+-- Denormalized (actually derivable via plans) so that the partial unique index
+-- "one active week per user" below is possible.
 ALTER TABLE plan_weeks ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
 
 UPDATE exercises SET user_id = 1;
@@ -28,7 +28,7 @@ ALTER TABLE plans DROP CONSTRAINT plans_user_id_fkey;
 ALTER TABLE plans ADD CONSTRAINT plans_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
--- Eindeutigkeit pro Benutzer statt global.
+-- Uniqueness per user instead of globally.
 ALTER TABLE exercises DROP CONSTRAINT exercises_name_key;
 CREATE UNIQUE INDEX exercises_user_name_idx ON exercises(user_id, name);
 

@@ -23,9 +23,9 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return;
   }
 
-  // Ein JWT bleibt bis zum Ablauf gueltig. Ohne diese Pruefung koennte ein geloeschter Benutzer
-  // (oder einer ohne Login, z. B. der Default-User, oder ein abgelaufener Demo-Benutzer, den der
-  // Aufraeum-Job noch nicht erwischt hat) mit einem alten Cookie weiterarbeiten.
+  // A JWT stays valid until it expires. Without this check a deleted user (or one without login,
+  // e.g. the default user, or an expired demo user the cleanup job hasn't caught yet) could keep
+  // working with an old cookie.
   const { rows } = await pool.query<{ username: string }>(
     `SELECT username FROM users
      WHERE id = $1 AND password_hash IS NOT NULL AND (demo_expires_at IS NULL OR demo_expires_at > now())`,
@@ -40,8 +40,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   next();
 }
 
-// Fuer Routen hinter requireAuth: liefert den eingeloggten Benutzer ohne Non-Null-Assertions.
+// For routes behind requireAuth: returns the logged-in user without non-null assertions.
 export function currentUser(req: Request): AuthUser {
-  if (!req.user) throw new Error('currentUser() ohne requireAuth aufgerufen');
+  if (!req.user) throw new Error('currentUser() called without requireAuth');
   return req.user;
 }

@@ -1,13 +1,13 @@
-# Build-Kontext ist das Repo-Root (npm workspaces, gemeinsames package-lock.json),
-# siehe build.context/build.dockerfile in docker-compose.yml.
+# The build context is the repo root (npm workspaces, shared package-lock.json),
+# see build.context/build.dockerfile in docker-compose.yml.
 
 # ---- Build stage ---------------------------------------------------------
 FROM node:24-alpine AS build
 
 WORKDIR /app
 
-# Nur die Workspace-Manifeste, damit npm ci das gemeinsame Lockfile aufloesen kann
-# (alle Workspaces muessen vorhanden sein, installiert wird nur das Backend).
+# Only the workspace manifests, so npm ci can resolve the shared lockfile
+# (all workspaces must be present, only the backend gets installed).
 COPY package.json package-lock.json ./
 COPY backend/package.json ./backend/package.json
 COPY frontend/package.json ./frontend/package.json
@@ -19,12 +19,12 @@ COPY backend ./backend
 WORKDIR /app/backend
 RUN npm run build
 
-# ---- Dev stage (nur lokal: docker-compose.yml, Hot-Reload per Bind-Mount) --
+# ---- Dev stage (local only: docker-compose.yml, hot reload via bind mount) --
 FROM build AS dev
 
 CMD ["npm", "run", "dev"]
 
-# ---- Runtime stage (Default-Target, wird in CI nach GHCR gepusht) --------
+# ---- Runtime stage (default target, pushed to GHCR by CI) ----------------
 FROM node:24-alpine
 
 WORKDIR /app
@@ -41,9 +41,9 @@ COPY backend/db ./backend/db
 WORKDIR /app/backend
 USER node
 
-# NODE_ENV=production (Secure-Cookie) wird bewusst nicht hier gesetzt, sondern im Deployment hinter
-# TLS -- ueber plain http (lokal, e2e) wuerde der Browser das Login-Cookie sonst verwerfen.
+# NODE_ENV=production (secure cookie) is deliberately not set here but in the deployment behind
+# TLS -- over plain http (local, e2e) the browser would otherwise drop the login cookie.
 EXPOSE 3000
 
-# Migrationen laufen beim Start (src/index.ts).
+# Migrations run on startup (src/index.ts).
 CMD ["node", "dist/index.js"]

@@ -30,7 +30,7 @@ describe('SessionStart', () => {
     await screen.findByRole('option', { name: 'Plan A' });
     await user.selectOptions(select, '1');
 
-    const startButton = screen.getByRole('button', { name: 'Woche starten' });
+    const startButton = screen.getByRole('button', { name: 'Start week' });
     expect(startButton).toBeEnabled();
 
     fetchMock.mockResolvedValueOnce(jsonResponse({}, true, 200));
@@ -60,15 +60,15 @@ describe('SessionStart', () => {
       }),
     );
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ days: [{ id: 10, name: 'Tag A', blocks: [{ training_method: { name: 'Kraft' } }] }] }),
+      jsonResponse({ days: [{ id: 10, name: 'Day A', blocks: [{ training_method: { name: 'Strength' } }] }] }),
     );
 
     render(<SessionStart onStarted={onStarted} />);
 
-    const daySelect = await screen.findByLabelText('Trainingstag');
+    const daySelect = await screen.findByLabelText('Training day');
     await user.selectOptions(daySelect, '10');
 
-    const startButton = screen.getByRole('button', { name: 'Training starten' });
+    const startButton = screen.getByRole('button', { name: 'Start training' });
     fetchMock.mockResolvedValueOnce(jsonResponse({ id: 99 }, true, 201));
 
     await user.click(startButton);
@@ -96,16 +96,16 @@ describe('SessionStart', () => {
       }),
     );
     fetchMock.mockResolvedValueOnce(
-      jsonResponse({ days: [{ id: 10, name: 'Tag A', blocks: [{ training_method: { name: 'Kraft' } }] }] }),
+      jsonResponse({ days: [{ id: 10, name: 'Day A', blocks: [{ training_method: { name: 'Strength' } }] }] }),
     );
 
     render(<SessionStart onStarted={onStarted} />);
 
-    const daySelect = await screen.findByLabelText('Trainingstag');
+    const daySelect = await screen.findByLabelText('Training day');
     await user.selectOptions(daySelect, '10');
 
-    expect(screen.queryByRole('button', { name: 'Training starten' })).not.toBeInTheDocument();
-    const resumeButton = screen.getByRole('button', { name: 'Fortsetzen (in Bearbeitung)' });
+    expect(screen.queryByRole('button', { name: 'Start training' })).not.toBeInTheDocument();
+    const resumeButton = screen.getByRole('button', { name: 'Resume (in progress)' });
 
     const callsBefore = fetchMock.mock.calls.length;
     await user.click(resumeButton);
@@ -131,15 +131,15 @@ describe('SessionStart', () => {
     render(<SessionStart onStarted={vi.fn()} />);
 
     await screen.findByText('Plan B');
-    await user.click(screen.getByRole('button', { name: 'Woche beenden' }));
+    await user.click(screen.getByRole('button', { name: 'End week' }));
 
-    expect(screen.getByText('Woche wirklich beenden?')).toBeInTheDocument();
+    expect(screen.getByText('Really end the week?')).toBeInTheDocument();
 
     fetchMock.mockResolvedValueOnce(jsonResponse({}, true, 200));
     fetchMock.mockResolvedValueOnce(jsonResponse(null));
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
 
-    await user.click(screen.getByRole('button', { name: 'Beenden' }));
+    await user.click(screen.getByRole('button', { name: 'End' }));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith('/api/plan-weeks/5', expect.objectContaining({ method: 'PATCH' })),

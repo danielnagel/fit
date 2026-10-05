@@ -79,21 +79,21 @@ describe('POST /api/plans validation', () => {
         days: [{ blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
       });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/Trainingstag/);
+    expect(res.body.message).toMatch(/training day/);
   });
 
   it('rejects a day without blocks', async () => {
     const res = await agent
       .post('/api/plans')
-      .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [] }] });
+      .send({ name: 'Plan', days: [{ name: 'Day 1', blocks: [] }] });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/Block/);
+    expect(res.body.message).toMatch(/block/);
   });
 
   it('rejects a block without a valid training_method_id', async () => {
     const res = await agent
       .post('/api/plans')
-      .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [{ exercises: [] }] }] });
+      .send({ name: 'Plan', days: [{ name: 'Day 1', blocks: [{ exercises: [] }] }] });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/training_method_id/);
   });
@@ -101,7 +101,7 @@ describe('POST /api/plans validation', () => {
   it('rejects an unknown training_method_id', async () => {
     const res = await agent
       .post('/api/plans')
-      .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [{ training_method_id: 999999, exercises: [] }] }] });
+      .send({ name: 'Plan', days: [{ name: 'Day 1', blocks: [{ training_method_id: 999999, exercises: [] }] }] });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/training_method_id/);
   });
@@ -115,20 +115,20 @@ describe('POST /api/plans validation', () => {
         name: 'Plan',
         days: [
           {
-            name: 'Tag 1',
+            name: 'Day 1',
             blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }],
           },
         ],
       });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/gerade Anzahl/);
+    expect(res.body.message).toMatch(/even number/);
   });
 
   it('rejects a single-scope block without exercises', async () => {
     const method = await singleScopeMethod();
     const res = await agent
       .post('/api/plans')
-      .send({ name: 'Plan', days: [{ name: 'Tag 1', blocks: [{ training_method_id: method.id, exercises: [] }] }] });
+      .send({ name: 'Plan', days: [{ name: 'Day 1', blocks: [{ training_method_id: method.id, exercises: [] }] }] });
     expect(res.status).toBe(400);
   });
 
@@ -138,13 +138,13 @@ describe('POST /api/plans validation', () => {
       .post('/api/plans')
       .send({
         name: 'Plan',
-        days: [{ name: 'Tag 1', blocks: [{ training_method_id: method.id, exercises: [{ note: 'x' }] }] }],
+        days: [{ name: 'Day 1', blocks: [{ training_method_id: method.id, exercises: [{ note: 'x' }] }] }],
       });
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/exercise_id/);
   });
 
-  it('rejects is_unilateral_active on a scope-all block (Zirkel-Intervall)', async () => {
+  it('rejects is_unilateral_active on a scope-all block (circuit interval)', async () => {
     const method = await circuitMethod();
     const exercise = await createExercise(agent, { is_unilateral: true });
     const res = await agent
@@ -153,7 +153,7 @@ describe('POST /api/plans validation', () => {
         name: 'Plan',
         days: [
           {
-            name: 'Tag 1',
+            name: 'Day 1',
             blocks: [
               { training_method_id: method.id, exercises: [{ exercise_id: exercise.id, is_unilateral_active: true }] },
             ],
@@ -161,7 +161,7 @@ describe('POST /api/plans validation', () => {
         ],
       });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/Zirkel-Intervall/);
+    expect(res.body.message).toMatch(/circuit interval/);
   });
 
   it('rejects is_unilateral_active for an exercise that is not marked as unilateral', async () => {
@@ -173,7 +173,7 @@ describe('POST /api/plans validation', () => {
         name: 'Plan',
         days: [
           {
-            name: 'Tag 1',
+            name: 'Day 1',
             blocks: [
               { training_method_id: method.id, exercises: [{ exercise_id: exercise.id, is_unilateral_active: true }] },
             ],
@@ -181,22 +181,22 @@ describe('POST /api/plans validation', () => {
         ],
       });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/einseitig/);
+    expect(res.body.message).toMatch(/unilaterally/);
   });
 });
 
 describe('POST /api/plans success', () => {
   it('creates a nested plan and returns the full detail structure', async () => {
     const method = await singleScopeMethod();
-    const exercise = await createExercise(agent, { name: 'Kniebeuge' });
+    const exercise = await createExercise(agent, { name: 'Squat' });
 
     const res = await agent
       .post('/api/plans')
       .send({
-        name: 'Ganzkörper',
+        name: 'Full body',
         days: [
           {
-            name: 'Tag 1',
+            name: 'Day 1',
             blocks: [
               {
                 training_method_id: method.id,
@@ -208,17 +208,17 @@ describe('POST /api/plans success', () => {
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.name).toBe('Ganzkörper');
+    expect(res.body.name).toBe('Full body');
     expect(res.body.days).toHaveLength(1);
     const [day] = res.body.days;
-    expect(day.name).toBe('Tag 1');
+    expect(day.name).toBe('Day 1');
     expect(day.blocks).toHaveLength(1);
     const [block] = day.blocks;
     expect(block.training_method.id).toBe(method.id);
     expect(block.exercises).toEqual([
       expect.objectContaining({
         exercise_id: exercise.id,
-        exercise_name: 'Kniebeuge',
+        exercise_name: 'Squat',
         reps_min: 8,
         reps_max: 12,
         note: 'locker',
@@ -238,7 +238,7 @@ describe('POST /api/plans success', () => {
         name: 'Plan',
         days: [
           {
-            name: 'Tag 1',
+            name: 'Day 1',
             blocks: [
               {
                 training_method_id: method.id,
@@ -262,7 +262,7 @@ describe('POST /api/plans success', () => {
 
   it.each([
     ['self-paced single-scope (Stufensatz)', selfPacedMethod],
-    ['fixed-work-rest (Hochintensitätssatz)', fixedWorkRestMethod],
+    ['fixed-work-rest (high-intensity set)', fixedWorkRestMethod],
   ])('activates is_unilateral_active on a %s block', async (_label, methodFactory) => {
     const method = await methodFactory();
     const exercise = await createExercise(agent, { is_unilateral: true });
@@ -273,7 +273,7 @@ describe('POST /api/plans success', () => {
         name: 'Plan',
         days: [
           {
-            name: 'Tag 1',
+            name: 'Day 1',
             blocks: [
               { training_method_id: method.id, exercises: [{ exercise_id: exercise.id, is_unilateral_active: true }] },
             ],
@@ -289,8 +289,8 @@ describe('POST /api/plans success', () => {
 
 describe('GET /api/plans', () => {
   it('lists plans newest first with a day count', async () => {
-    const p1 = await createPlan(agent, { name: 'Erster' });
-    const p2 = await createPlan(agent, { name: 'Zweiter' });
+    const p1 = await createPlan(agent, { name: 'First' });
+    const p2 = await createPlan(agent, { name: 'Second' });
 
     const res = await agent.get('/api/plans');
 
@@ -312,19 +312,19 @@ describe('PUT /api/plans/:id', () => {
     const method = await singleScopeMethod();
     const exercise = await createExercise(agent);
     const plan = await createPlan(agent, {
-      days: [{ name: 'Alt', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
+      days: [{ name: 'Old', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
     });
 
     const res = await agent
       .put(`/api/plans/${plan.id}`)
       .send({
         name: plan.name,
-        days: [{ name: 'Neu', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
+        days: [{ name: 'New', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
       });
 
     expect(res.status).toBe(200);
     expect(res.body.days).toHaveLength(1);
-    expect(res.body.days[0].name).toBe('Neu');
+    expect(res.body.days[0].name).toBe('New');
   });
 
   it('returns 404 for an unknown id', async () => {

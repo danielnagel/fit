@@ -6,7 +6,7 @@ import type { Pool } from 'pg';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');
 
-// upTo (inklusive, Dateiname) nur fuer Tests: Schema bis zu einem Zwischenstand migrieren.
+// upTo (inclusive, file name) for tests only: migrate the schema up to an intermediate state.
 export async function runMigrations(pool: Pool, options: { upTo?: string } = {}) {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (

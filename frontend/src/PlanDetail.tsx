@@ -18,7 +18,7 @@ type Props = {
 };
 
 export default function PlanDetail({ plan }: Props) {
-  if (plan.days.length === 0) return <p className="hint mt-2">Dieser Plan hat noch keine Trainingstage.</p>;
+  if (plan.days.length === 0) return <p className="hint mt-2">This plan doesn't have any training days yet.</p>;
 
   return (
     <div className="flex flex-col gap-2">
@@ -35,17 +35,17 @@ export default function PlanDetail({ plan }: Props) {
                 {block.exercises.map((ex, idx) => (
                   <li key={ex.id} className="pl-3 text-sm text-fg">
                     {block.training_method.scope === 'pair' && (
-                      <span className="hint">{idx % 2 === 0 ? 'schwer: ' : 'leicht: '}</span>
+                      <span className="hint">{idx % 2 === 0 ? 'heavy: ' : 'light: '}</span>
                     )}
                     {ex.exercise_name}
                     {ex.reps_min != null && ex.reps_max != null && (
                       <span className="hint">
                         {' '}
-                        · {ex.reps_min}–{ex.reps_max} Wdh.
+                        · {ex.reps_min}–{ex.reps_max} reps
                       </span>
                     )}
                     {ex.note && <span className="hint"> · {ex.note}</span>}
-                    {ex.is_unilateral_active && <span className="hint"> · einseitig</span>}
+                    {ex.is_unilateral_active && <span className="hint"> · unilateral</span>}
                   </li>
                 ))}
               </ul>

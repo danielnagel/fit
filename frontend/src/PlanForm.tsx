@@ -233,18 +233,18 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
 
     if (!res.ok) {
       const errBody = await res.json().catch(() => ({}));
-      setError(errBody.message ?? `Fehler (${res.status})`);
+      setError(errBody.message ?? `Error (${res.status})`);
       return;
     }
 
     onDone();
   };
 
-  if (loading) return <p className="hint">Lade...</p>;
+  if (loading) return <p className="hint">Loading...</p>;
 
   return (
     <form className="panel-accent flex flex-col items-start gap-3" onSubmit={handleSubmit}>
-      {error && <p className="text-sm text-danger">Fehler: {error}</p>}
+      {error && <p className="text-sm text-danger">Error: {error}</p>}
       <label className="flex items-center gap-2">
         Name <input className="field" value={name} onChange={(e) => setName(e.target.value)} required />
       </label>
@@ -256,11 +256,11 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
               className="field"
               value={day.name}
               onChange={(e) => updateDayName(dayIdx, e.target.value)}
-              placeholder="Trainingstag-Name"
+              placeholder="Training day name"
               required
             />
             <button type="button" className="btn-danger" onClick={() => removeDay(dayIdx)}>
-              Tag entfernen
+              Remove day
             </button>
           </legend>
 
@@ -281,7 +281,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
                     onChange={(e) => updateBlockMethod(dayIdx, blockIdx, e.target.value)}
                     required
                   >
-                    <option value="">Methode wählen...</option>
+                    <option value="">Choose method...</option>
                     {methods.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.name}
@@ -290,7 +290,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
                   </select>
                   {day.blocks.length > 1 && (
                     <button type="button" className="btn-danger" onClick={() => removeBlock(dayIdx, blockIdx)}>
-                      Block entfernen
+                      Remove block
                     </button>
                   )}
                 </legend>
@@ -303,14 +303,14 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
                       onChange={(e) => updateExerciseField(dayIdx, blockIdx, exIdx, 'exercise_id', e.target.value)}
                       required
                     >
-                      <option value="">Übung wählen...</option>
+                      <option value="">Choose exercise...</option>
                       {exercises.map((e) => (
                         <option key={e.id} value={e.id}>
                           {e.name}
                         </option>
                       ))}
                     </select>
-                    {scope === 'pair' && <span className="hint">{exIdx % 2 === 0 ? 'schwer' : 'leicht'}</span>}
+                    {scope === 'pair' && <span className="hint">{exIdx % 2 === 0 ? 'heavy' : 'light'}</span>}
                     {showReps && (() => {
                       const isHeavyPairSlot = scope === 'pair' && exIdx % 2 === 0;
                       const repsMinPlaceholder = isHeavyPairSlot ? '1' : '6';
@@ -318,7 +318,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
                       return (
                         <>
                           <label className="flex items-center gap-1.5">
-                            Wdh. von{' '}
+                            Reps from{' '}
                             <input
                               type="number"
                               min={0}
@@ -329,7 +329,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
                             />
                           </label>
                           <label className="flex items-center gap-1.5">
-                            bis{' '}
+                            to{' '}
                             <input
                               type="number"
                               min={0}
@@ -345,7 +345,7 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
                     <input
                       value={ex.note}
                       onChange={(e) => updateExerciseField(dayIdx, blockIdx, exIdx, 'note', e.target.value)}
-                      placeholder="Variante (optional, z. B. 3 Sek. Haltezeit am tiefsten Punkt)"
+                      placeholder="Variant (optional, e.g. 3 s hold at the bottom)"
                       className="field w-full max-w-md"
                     />
                     {allowUnilateral && exercisesById.get(ex.exercise_id)?.is_unilateral && (
@@ -357,39 +357,39 @@ export default function PlanForm({ planId, exercises, onDone, onCancel }: Props)
                             updateExerciseField(dayIdx, blockIdx, exIdx, 'is_unilateral_active', e.target.checked)
                           }
                         />
-                        einseitig
+                        unilateral
                       </label>
                     )}
                     {(scope !== 'pair' ? block.exercises.length > 1 : block.exercises.length > 2) && (
                       <button type="button" className="btn-danger" onClick={() => removeExercise(dayIdx, blockIdx, exIdx)}>
-                        Übung entfernen
+                        Remove exercise
                       </button>
                     )}
                   </div>
                 ))}
 
                 <button type="button" className="btn" onClick={() => addExercise(dayIdx, blockIdx)}>
-                  {scope === 'pair' ? 'Paar hinzufügen' : 'Übung hinzufügen'}
+                  {scope === 'pair' ? 'Add pair' : 'Add exercise'}
                 </button>
               </fieldset>
             );
           })}
 
           <button type="button" className="btn" onClick={() => addBlock(dayIdx)}>
-            Block hinzufügen
+            Add block
           </button>
         </fieldset>
       ))}
       <button type="button" className="btn" onClick={addDay}>
-        Trainingstag hinzufügen
+        Add training day
       </button>
 
       <div className="flex gap-2">
         <button type="submit" className="btn-primary">
-          Speichern
+          Save
         </button>
         <button type="button" className="btn" onClick={onCancel}>
-          Abbrechen
+          Cancel
         </button>
       </div>
     </form>

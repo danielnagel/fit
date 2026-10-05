@@ -20,25 +20,25 @@ function setCookieHeader(res: request.Response): string {
 
 describe('password hashing', () => {
   it('verifies the correct password and rejects a wrong one', async () => {
-    const hash = await hashPassword('richtig-geheim');
+    const hash = await hashPassword('correct-secret');
 
     expect(hash).toMatch(/^scrypt\$\d+\$\d+\$\d+\$[^$]+\$[^$]+$/);
-    expect(await passwords.verify('richtig-geheim', hash)).toBe(true);
-    expect(await passwords.verify('falsch-geheim', hash)).toBe(false);
+    expect(await passwords.verify('correct-secret', hash)).toBe(true);
+    expect(await passwords.verify('wrong-secret', hash)).toBe(false);
   });
 
   it('uses a fresh salt for every hash', async () => {
-    expect(await hashPassword('gleich')).not.toBe(await hashPassword('gleich'));
+    expect(await hashPassword('same')).not.toBe(await hashPassword('same'));
   });
 
   it('rejects malformed stored hashes without throwing', async () => {
-    expect(await passwords.verify('x', 'kein-hash')).toBe(false);
+    expect(await passwords.verify('x', 'not-a-hash')).toBe(false);
   });
 });
 
 describe('POST /api/auth/login', () => {
   it('rejects missing fields', async () => {
-    const res = await request(app).post('/api/auth/login').send({ username: 'nur-name' });
+    const res = await request(app).post('/api/auth/login').send({ username: 'name-only' });
 
     expect(res.status).toBe(400);
   });
@@ -74,7 +74,7 @@ describe('POST /api/auth/login', () => {
     await createUser('anna');
     const verifySpy = vi.spyOn(passwords, 'verify');
 
-    const res = await request(app).post('/api/auth/login').send({ username: 'anna', password: 'falsch' });
+    const res = await request(app).post('/api/auth/login').send({ username: 'anna', password: 'wrong' });
 
     expect(res.status).toBe(401);
     expect(res.body).toEqual({ error: 'invalid_credentials' });
@@ -85,16 +85,16 @@ describe('POST /api/auth/login', () => {
   it('compares against a dummy hash for unknown usernames (timing parity)', async () => {
     const verifySpy = vi.spyOn(passwords, 'verify');
 
-    const res = await request(app).post('/api/auth/login').send({ username: 'niemand', password: 'egal' });
+    const res = await request(app).post('/api/auth/login').send({ username: 'nobody', password: 'whatever' });
 
     expect(res.status).toBe(401);
     expect(res.body).toEqual({ error: 'invalid_credentials' });
     expect(verifySpy).toHaveBeenCalledTimes(1);
-    expect(verifySpy).toHaveBeenCalledWith('egal', passwords.dummyHash);
+    expect(verifySpy).toHaveBeenCalledWith('whatever', passwords.dummyHash);
   });
 
   it('never logs in the legacy default user, which has no credentials', async () => {
-    const res = await request(app).post('/api/auth/login').send({ username: 'Default', password: 'egal' });
+    const res = await request(app).post('/api/auth/login').send({ username: 'Default', password: 'whatever' });
 
     expect(res.status).toBe(401);
   });
@@ -120,7 +120,7 @@ describe('GET /api/auth/me', () => {
 
   it('rejects a token signed with a different secret', async () => {
     const user = await createUser('anna');
-    const forged = jwt.sign({ sub: String(user.id), username: 'anna' }, 'falsches-secret');
+    const forged = jwt.sign({ sub: String(user.id), username: 'anna' }, 'wrong-secret');
 
     const res = await request(app).get('/api/auth/me').set('Cookie', `token=${forged}`);
 

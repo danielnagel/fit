@@ -6,9 +6,9 @@ import { buildDaySnapshot } from './routes/sessions.js';
 import { deleteUserWithData } from './users.js';
 import type { AuthUser } from './auth/jwt.js';
 
-// MODE=demo: oeffentliche Demo-Instanz. Jeder Besucher bekommt per "Demo ausprobieren" einen eigenen
-// Benutzer mit Beispieldaten (Isolation pro Benutzer, siehe routes/), der nach DEMO_TTL_MS samt
-// Daten wieder geloescht wird. Eine echte Anmeldung mit Passwort gibt es fuer Demo-Benutzer nicht.
+// MODE=demo: public demo instance. Every visitor gets their own user with example data via "Try the
+// demo" (isolation per user, see routes/), which is deleted again including all data after
+// DEMO_TTL_MS. Demo users can't log in with a password.
 export function isDemoMode() {
   return process.env.MODE === 'demo';
 }
@@ -17,35 +17,35 @@ export const DEMO_TTL_MS = 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Kein gueltiger scrypt-Hash: passwords.verify() liefert dafuer immer false, ein Login per Passwort
-// ist damit unmoeglich. users_login_complete verlangt trotzdem einen Wert neben dem username.
+// Not a valid scrypt hash: passwords.verify() always returns false for it, so a password login is
+// impossible. users_login_complete still requires a value next to the username.
 const NO_LOGIN_HASH = '!demo';
 
 const DEMO_EXERCISES = [
-  { name: 'Kniebeuge', description: 'Füße schulterbreit, Knie über den Zehen, Hüfte bis unter Kniehöhe.' },
-  { name: 'Liegestütze', description: 'Körper bildet eine Linie, Brust bis knapp über den Boden.' },
-  { name: 'Klimmzüge', description: 'Aus dem Hang bis das Kinn über der Stange ist, kontrolliert ablassen.' },
-  { name: 'Ausfallschritte', description: 'Großer Schritt nach vorn, hinteres Knie fast bis zum Boden.' },
-  { name: 'Rudern am Tisch', description: 'Unter einen stabilen Tisch legen, Brust an die Tischkante ziehen.' },
-  { name: 'Burpees', description: 'Hocke, Liegestützposition, zurück in die Hocke, Strecksprung.' },
+  { name: 'Squat', description: 'Feet shoulder-width apart, knees over the toes, hips below knee height.' },
+  { name: 'Push-ups', description: 'Body forms a straight line, chest down to just above the floor.' },
+  { name: 'Pull-ups', description: 'From a dead hang until the chin is over the bar, lower under control.' },
+  { name: 'Lunges', description: 'Big step forward, back knee almost down to the floor.' },
+  { name: 'Table rows', description: 'Lie under a sturdy table, pull your chest up to the table edge.' },
+  { name: 'Burpees', description: 'Squat, plank position, back into the squat, jump up.' },
 ];
 
-// Tag -> Bloecke (Trainingsmethode aus dem Standard-Katalog) -> Uebungen mit Ziel-Wiederholungen.
+// Day -> blocks (training method from the default catalog) -> exercises with target reps.
 const DEMO_PLAN = {
-  name: 'Ganzkörper (Demo)',
+  name: 'Full body (demo)',
   days: [
     {
-      name: 'Ganzkörper A',
+      name: 'Full body A',
       blocks: [
-        { method: 'Intervallsatz', exercises: [['Kniebeuge', 10, 15], ['Liegestütze', 8, 12]] },
-        { method: 'Stufensatz', exercises: [['Klimmzüge', null, null]] },
+        { method: 'Interval set', exercises: [['Squat', 10, 15], ['Push-ups', 8, 12]] },
+        { method: 'Ladder set', exercises: [['Pull-ups', null, null]] },
       ],
     },
     {
-      name: 'Ganzkörper B',
+      name: 'Full body B',
       blocks: [
-        { method: 'Supersatz', exercises: [['Ausfallschritte', 10, 12], ['Rudern am Tisch', 8, 10]] },
-        { method: 'Hochintensitaetssatz', exercises: [['Burpees', null, null]] },
+        { method: 'Superset', exercises: [['Lunges', 10, 12], ['Table rows', 8, 10]] },
+        { method: 'High-intensity set', exercises: [['Burpees', null, null]] },
       ],
     },
   ],
@@ -104,13 +104,13 @@ async function insertPlan(client: PoolClient, userId: number) {
   return { planId, dayIds };
 }
 
-// Saetze je Block passend zur Methode, mit leicht steigenden Werten pro Woche (fuer Fortschritt/Rekorde).
+// Sets per block matching the method, with slightly rising values per week (for progress/records).
 function setsForBlock(block: SnapshotBlock, week: number) {
   const sets: { exercise_id: number; plan_block_exercise_id: number; unit_index: number; reps: number }[] = [];
   const method = block.training_method;
   for (const ex of block.exercises) {
     if (method.timing_family === 'self-paced') {
-      // Stufensatz: Wiederholungen steigen je Stufe, pro Woche eine Stufe mehr.
+      // Ladder set: reps rise with each step, one more step per week.
       for (let stage = 0; stage < 3 + week; stage++) {
         sets.push({ exercise_id: ex.exercise_id, plan_block_exercise_id: ex.plan_block_exercise_id, unit_index: stage, reps: stage + 1 });
       }
@@ -160,7 +160,7 @@ async function insertHistory(client: PoolClient, userId: number, planId: number,
     }
   }
 
-  // Laufende Woche ohne Sessions: man kann direkt ein Training starten.
+  // Running week without sessions: a training can be started right away.
   await client.query(
     'INSERT INTO plan_weeks (user_id, plan_id, week_number, started_at) VALUES ($1, $2, $3, $4)',
     [userId, planId, HISTORY_WEEKS + 1, new Date(now - DAY_MS)],
@@ -215,9 +215,9 @@ export function startDemoCleanup() {
   const run = () =>
     deleteExpiredDemoUsers()
       .then((count) => {
-        if (count > 0) console.log(`demo: ${count} abgelaufene Demo-Benutzer geloescht`);
+        if (count > 0) console.log(`demo: deleted ${count} expired demo users`);
       })
-      .catch((err: Error) => console.error('demo: Aufraeumen fehlgeschlagen:', err.message));
+      .catch((err: Error) => console.error('demo: cleanup failed:', err.message));
   void run();
   setInterval(run, CLEANUP_INTERVAL_MS).unref();
 }

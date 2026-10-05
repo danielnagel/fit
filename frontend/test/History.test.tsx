@@ -24,9 +24,9 @@ const session101 = {
   plan_day_id: 5,
   plan_week_id: 1,
   plan_id: 1,
-  plan_name: 'Kraftplan',
+  plan_name: 'Strength plan',
   week_started_at: '2026-01-05T00:00:00.000Z',
-  day_snapshot: { name: 'Tag A', blocks: [{ training_method: { name: 'Kraft' } }] },
+  day_snapshot: { name: 'Day A', blocks: [{ training_method: { name: 'Strength' } }] },
   status: 'completed' as const,
   started_at: '2026-01-05T10:00:00.000Z',
   completed_at: '2026-01-05T11:00:00.000Z',
@@ -47,7 +47,7 @@ describe('History', () => {
 
     renderHistory();
 
-    expect(await screen.findByText('Noch keine Trainings durchgeführt.')).toBeInTheDocument();
+    expect(await screen.findByText('No trainings done yet.')).toBeInTheDocument();
   });
 
   it('groups sessions by week and expands/collapses the week', async () => {
@@ -57,28 +57,28 @@ describe('History', () => {
 
     renderHistory();
 
-    await screen.findByText('Kraftplan');
-    expect(screen.queryByText('Tag A')).not.toBeInTheDocument();
+    await screen.findByText('Strength plan');
+    expect(screen.queryByText('Day A')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Woche anzeigen' }));
+    await user.click(screen.getByRole('button', { name: 'Show week' }));
 
-    expect(screen.getByText('Tag A')).toBeInTheDocument();
-    expect(screen.getByText('Abgeschlossen')).toBeInTheDocument();
+    expect(screen.getByText('Day A')).toBeInTheDocument();
+    expect(screen.getByText('Completed')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Woche ausblenden' }));
+    await user.click(screen.getByRole('button', { name: 'Hide week' }));
 
-    expect(screen.queryByText('Tag A')).not.toBeInTheDocument();
+    expect(screen.queryByText('Day A')).not.toBeInTheDocument();
   });
 
   it('expands session details and lists logged sets', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([session101]));
-    fetchMock.mockResolvedValueOnce(jsonResponse([{ id: 7, name: 'Kniebeuge' }]));
+    fetchMock.mockResolvedValueOnce(jsonResponse([{ id: 7, name: 'Squat' }]));
 
     renderHistory();
 
-    await screen.findByText('Kraftplan');
-    await user.click(screen.getByRole('button', { name: 'Woche anzeigen' }));
+    await screen.findByText('Strength plan');
+    await user.click(screen.getByRole('button', { name: 'Show week' }));
 
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
@@ -100,23 +100,23 @@ describe('History', () => {
     await user.click(screen.getByRole('button', { name: 'Details' }));
 
     const table = await screen.findByRole('table');
-    expect(within(table).getByText('Kniebeuge')).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Wiederholungen' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Seite' })).toBeInTheDocument();
-    const row = within(table).getByText('Kniebeuge').closest('tr')!;
+    expect(within(table).getByText('Squat')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Reps' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Side' })).toBeInTheDocument();
+    const row = within(table).getByText('Squat').closest('tr')!;
     expect(within(row).getByText('10')).toBeInTheDocument();
     expect(within(row).getByText('1')).toBeInTheDocument();
-    expect(within(row).getByText('links')).toBeInTheDocument();
+    expect(within(row).getByText('left')).toBeInTheDocument();
   });
 
   it('loads and displays the progress chart for a selected exercise', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
-    fetchMock.mockResolvedValueOnce(jsonResponse([{ id: 7, name: 'Kniebeuge' }]));
+    fetchMock.mockResolvedValueOnce(jsonResponse([{ id: 7, name: 'Squat' }]));
 
     renderHistory();
 
-    const select = await screen.findByLabelText('Übung');
+    const select = await screen.findByLabelText('Exercise');
 
     fetchMock.mockResolvedValueOnce(
       jsonResponse([
@@ -126,7 +126,7 @@ describe('History', () => {
 
     await user.selectOptions(select, '7');
 
-    expect(await screen.findByRole('img', { name: /Fortschritt/ })).toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: /Progress/ })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/exercises/7/progress');
   });
 
@@ -137,19 +137,19 @@ describe('History', () => {
 
     renderHistory();
 
-    await screen.findByText('Kraftplan');
-    await user.click(screen.getByRole('button', { name: 'Woche anzeigen' }));
-    await user.click(screen.getByRole('button', { name: 'Löschen' }));
+    await screen.findByText('Strength plan');
+    await user.click(screen.getByRole('button', { name: 'Show week' }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
 
-    expect(screen.getByText('Training endgültig löschen? Dies kann nicht rückgängig gemacht werden.')).toBeInTheDocument();
+    expect(screen.getByText('Permanently delete this training? This cannot be undone.')).toBeInTheDocument();
 
     fetchMock.mockResolvedValueOnce({ ok: true, status: 204, json: async () => undefined } as Response);
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
 
-    const confirmButtons = screen.getAllByRole('button', { name: 'Löschen' });
+    const confirmButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
-    await waitFor(() => expect(screen.queryByText('Kraftplan')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('Strength plan')).not.toBeInTheDocument());
     expect(fetchMock).toHaveBeenCalledWith('/api/sessions/101', expect.objectContaining({ method: 'DELETE' }));
   });
 });

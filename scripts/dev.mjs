@@ -7,11 +7,11 @@ const rootDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 process.chdir(rootDir);
 process.loadEnvFile('.env');
 
-console.log('-> Datenbank pruefen/starten (fit-db)...');
+console.log('-> Checking/starting the database (fit-db)...');
 execFileSync('docker', ['compose', 'up', '-d', '--wait', 'fit-db'], { stdio: 'inherit' });
 
-// Backend/Frontend laufen hier auf dem Host, nicht im Docker-Netzwerk -> andere
-// Verbindungsdaten als im docker-compose-Modus (dort heisst der DB-Host "fit-db").
+// Backend/frontend run on the host here, not in the Docker network -> different
+// connection settings than in docker compose mode (where the DB host is called "fit-db").
 process.env.PGHOST = 'localhost';
 process.env.PGPORT = '5432';
 process.env.PGUSER = process.env.POSTGRES_USER;
@@ -20,7 +20,7 @@ process.env.PGDATABASE = process.env.POSTGRES_DB;
 process.env.PORT ??= '3000';
 process.env.VITE_BACKEND_URL = `http://localhost:${process.env.PORT}`;
 
-console.log('-> Backend & Frontend lokal starten (Hot Reload)...');
+console.log('-> Starting backend & frontend locally (hot reload)...');
 execFileSync(
   'npx',
   [

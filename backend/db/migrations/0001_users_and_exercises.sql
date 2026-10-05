@@ -1,4 +1,4 @@
--- Multi-User-Vorbereitung: feste Default-Nutzer-Zeile (id=1), Auth folgt spaeter.
+-- Multi-user groundwork: fixed default user row (id=1), auth comes later (see 0017).
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,

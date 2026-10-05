@@ -1,25 +1,25 @@
--- Loest die hartcodierten Trainingsmethoden (plan_days.type) durch einen nutzerkonfigurierbaren
--- Katalog ab (siehe docs/GENERISCHE_TRAININGSMETHODEN.md). Ein Trainingstag besteht ab jetzt aus
--- mehreren Bloecken (plan_blocks), jeder Block referenziert eine Katalog-Methode (training_methods).
+-- Replaces the hard-coded training methods (plan_days.type) with a user-configurable
+-- catalog (see docs/GENERIC_TRAINING_METHODS.md). From now on a training day consists of
+-- several blocks (plan_blocks), each block references a catalog method (training_methods).
 CREATE TABLE training_methods (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   scope TEXT NOT NULL CHECK (scope IN ('single', 'pair', 'all')),
   timing_family TEXT NOT NULL CHECK (timing_family IN ('fixed-window-remainder', 'fixed-work-rest', 'self-paced')),
-  -- fixed-window-remainder: Fensterdauer je Runde.
+  -- fixed-window-remainder: window duration per round.
   window_seconds INTEGER,
-  -- fixed-work-rest: Belastungsdauer je Runde.
+  -- fixed-work-rest: work duration per round.
   work_seconds INTEGER,
-  -- fixed-work-rest: Pause je Runde; self-paced+rest_formula=fixed: konstante Pause nach jedem Satz.
+  -- fixed-work-rest: rest per round; self-paced+rest_formula=fixed: constant rest after each set.
   rest_seconds INTEGER,
-  -- nur self-paced: wie sich die Pause berechnet.
+  -- self-paced only: how the rest is calculated.
   rest_formula TEXT CHECK (rest_formula IN ('proportional', 'fixed')),
-  -- self-paced+rest_formula=proportional: Faktor x gemessene Satzdauer.
+  -- self-paced+rest_formula=proportional: factor x measured set duration.
   rest_factor NUMERIC,
   stop_condition TEXT NOT NULL CHECK (stop_condition IN ('fixed-count', 'time-budget', 'all-exercises-done')),
-  -- stop_condition=fixed-count: feste Rundenzahl.
+  -- stop_condition=fixed-count: fixed number of rounds.
   rounds INTEGER,
-  -- stop_condition=time-budget: Zeitbudget mit Kulanz (aktuelle Einheit darf noch beendet werden).
+  -- stop_condition=time-budget: time budget with grace (the current unit may still be finished).
   total_duration_seconds INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -30,7 +30,7 @@ VALUES
   ('Intervallsatz', 'single', 'fixed-window-remainder', 180, NULL, NULL, NULL, NULL, 'fixed-count', 3, NULL),
   ('Stufensatz', 'single', 'self-paced', NULL, NULL, NULL, 'proportional', 1.0, 'time-budget', NULL, 450),
   ('Supersatz', 'pair', 'fixed-window-remainder', 240, NULL, NULL, NULL, NULL, 'fixed-count', 2, NULL),
-  -- neu gedacht: reihum eine Uebung nach der anderen statt gleichzeitigem, pausenlosem Tippen.
+  -- reworked: one exercise after the other in turn instead of tapping all at once without rest.
   ('Zirkel-Intervall', 'all', 'self-paced', NULL, NULL, NULL, 'proportional', 0.5, 'time-budget', NULL, 1200),
   ('Hochintensitaetssatz', 'single', 'fixed-work-rest', NULL, 20, 10, NULL, NULL, 'fixed-count', 8, NULL);
 
@@ -54,9 +54,9 @@ CREATE TABLE plan_block_exercises (
 CREATE INDEX plan_blocks_plan_day_id_idx ON plan_blocks(plan_day_id);
 CREATE INDEX plan_block_exercises_plan_block_id_idx ON plan_block_exercises(plan_block_id);
 
--- Datenmigration: jeder bestehende plan_days-Datensatz bekommt einen eigenen Katalog-Eintrag mit
--- seinen exakten historischen Werten (nicht auf die Seed-Zeilen oben gemappt, damit individuelle
--- Abweichungen von den Standardwerten erhalten bleiben) und genau einen Block, der darauf verweist.
+-- Data migration: every existing plan_days row gets its own catalog entry with its
+-- exact historical values (not mapped onto the seed rows above, so that individual
+-- deviations from the defaults are kept) and exactly one block pointing at it.
 ALTER TABLE training_methods ADD COLUMN migrated_from_plan_day_id INTEGER;
 
 WITH migrated AS (

@@ -1,39 +1,39 @@
 import { test, expect } from '@playwright/test';
 import { E2E_USER } from '../global-setup';
 
-// Ohne das gespeicherte Login-Cookie starten.
+// Start without the stored login cookie.
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test.describe('Anmeldung', () => {
-  test('leitet ohne Login auf /login um und danach zur angefragten Seite zurück', async ({ page }) => {
+test.describe('Login', () => {
+  test('redirects to /login without a login and back to the requested page afterwards', async ({ page }) => {
     await page.goto('/plans');
     await expect(page).toHaveURL(/\/login$/);
 
-    await page.getByLabel('Benutzername').fill(E2E_USER.username);
-    await page.getByLabel('Passwort').fill(E2E_USER.password);
-    await page.getByRole('button', { name: 'Anmelden' }).click();
+    await page.getByLabel('Username').fill(E2E_USER.username);
+    await page.getByLabel('Password').fill(E2E_USER.password);
+    await page.getByRole('button', { name: 'Log in' }).click();
 
     await expect(page).toHaveURL(/\/plans$/);
-    await expect(page.getByRole('heading', { name: 'Trainingspläne' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Training plans' })).toBeVisible();
   });
 
-  test('zeigt einen Fehler bei falschem Passwort', async ({ page }) => {
+  test('shows an error for a wrong password', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Benutzername').fill(E2E_USER.username);
-    await page.getByLabel('Passwort').fill('falsches-passwort');
-    await page.getByRole('button', { name: 'Anmelden' }).click();
+    await page.getByLabel('Username').fill(E2E_USER.username);
+    await page.getByLabel('Password').fill('wrong-password');
+    await page.getByRole('button', { name: 'Log in' }).click();
 
-    await expect(page.getByRole('alert')).toHaveText('Benutzername oder Passwort falsch');
+    await expect(page.getByRole('alert')).toHaveText('Wrong username or password');
   });
 
-  test('meldet ab und sperrt danach den Zugriff', async ({ page }) => {
+  test('logs out and blocks access afterwards', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Benutzername').fill(E2E_USER.username);
-    await page.getByLabel('Passwort').fill(E2E_USER.password);
-    await page.getByRole('button', { name: 'Anmelden' }).click();
+    await page.getByLabel('Username').fill(E2E_USER.username);
+    await page.getByLabel('Password').fill(E2E_USER.password);
+    await page.getByRole('button', { name: 'Log in' }).click();
     await expect(page.getByRole('heading', { name: 'Training' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Abmelden' }).click();
+    await page.getByRole('button', { name: 'Log out' }).click();
     await expect(page).toHaveURL(/\/login$/);
 
     await page.goto('/exercises');

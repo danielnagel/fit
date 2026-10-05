@@ -1,5 +1,5 @@
-# Build-Kontext ist das Repo-Root (npm workspaces, gemeinsames package-lock.json),
-# siehe build.context/build.dockerfile in docker-compose.yml.
+# The build context is the repo root (npm workspaces, shared package-lock.json),
+# see build.context/build.dockerfile in docker-compose.yml.
 
 # ---- Build stage ---------------------------------------------------------
 FROM node:24-alpine AS build

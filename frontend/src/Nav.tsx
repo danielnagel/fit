@@ -4,10 +4,10 @@ type IconName = 'training' | 'plans' | 'methods' | 'exercises' | 'history';
 
 const links: { to: string; label: string; icon: IconName }[] = [
   { to: '/training', label: 'Training', icon: 'training' },
-  { to: '/plans', label: 'Pläne', icon: 'plans' },
-  { to: '/training-methods', label: 'Methoden', icon: 'methods' },
-  { to: '/exercises', label: 'Übungen', icon: 'exercises' },
-  { to: '/history', label: 'Historie', icon: 'history' },
+  { to: '/plans', label: 'Plans', icon: 'plans' },
+  { to: '/training-methods', label: 'Methods', icon: 'methods' },
+  { to: '/exercises', label: 'Exercises', icon: 'exercises' },
+  { to: '/history', label: 'History', icon: 'history' },
 ];
 
 function NavIcon({ name, className }: { name: IconName; className?: string }) {
@@ -84,7 +84,7 @@ export default function Nav({ username, onLogout }: { username?: string; onLogou
             <div className="flex items-center gap-2 sm:ml-2 sm:border-l sm:border-edge sm:pl-3">
               {username && <span className="hint max-w-32 truncate">{username}</span>}
               <button type="button" className="btn" onClick={onLogout}>
-                Abmelden
+                Log out
               </button>
             </div>
           )}

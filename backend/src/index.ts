@@ -7,7 +7,7 @@ const port = Number(process.env.PORT ?? 3000);
 
 async function main() {
   if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET ist nicht gesetzt (z. B. per `openssl rand -hex 32` erzeugen)');
+    throw new Error('JWT_SECRET is not set (generate one e.g. via `openssl rand -hex 32`)');
   }
   await runMigrations(pool);
   if (isDemoMode()) startDemoCleanup();
@@ -18,6 +18,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('Startup fehlgeschlagen:', err);
+  console.error('Startup failed:', err);
   process.exit(1);
 });

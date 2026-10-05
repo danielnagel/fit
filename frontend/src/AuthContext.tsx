@@ -8,10 +8,10 @@ export type AuthState = { status: 'loading' } | { status: 'anonymous' } | { stat
 
 type AuthContextValue = {
   state: AuthState;
-  // Liefert null bei Erfolg, sonst eine anzeigbare Fehlermeldung.
+  // Returns null on success, otherwise a displayable error message.
   login: (username: string, password: string) => Promise<string | null>;
   logout: () => Promise<void>;
-  // Nur im Demo-Modus: legt einen eigenen Demo-Benutzer mit Beispieldaten an und meldet ihn an.
+  // Demo mode only: creates a separate demo user with example data and logs it in.
   startDemo: () => Promise<string | null>;
 };
 
@@ -48,11 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ username, password }),
       });
     } catch {
-      return 'Server nicht erreichbar';
+      return 'Server not reachable';
     }
-    if (res.status === 401) return 'Benutzername oder Passwort falsch';
-    if (res.status === 429) return 'Zu viele Versuche – bitte in ein paar Minuten erneut probieren';
-    if (!res.ok) return `Fehler (${res.status})`;
+    if (res.status === 401) return 'Wrong username or password';
+    if (res.status === 429) return 'Too many attempts – please try again in a few minutes';
+    if (!res.ok) return `Error (${res.status})`;
     setState({ status: 'user', user: await res.json() });
     return null;
   }, []);
@@ -62,10 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       res = await fetch('/api/auth/demo', { method: 'POST' });
     } catch {
-      return 'Server nicht erreichbar';
+      return 'Server not reachable';
     }
-    if (res.status === 429) return 'Zu viele Demo-Zugänge von dieser Adresse – bitte später erneut probieren';
-    if (!res.ok) return `Fehler (${res.status})`;
+    if (res.status === 429) return 'Too many demo accounts from this address – please try again later';
+    if (!res.ok) return `Error (${res.status})`;
     setState({ status: 'user', user: await res.json() });
     return null;
   }, []);
@@ -81,6 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const value = useContext(AuthContext);
-  if (!value) throw new Error('useAuth() ausserhalb von <AuthProvider>');
+  if (!value) throw new Error('useAuth() used outside of <AuthProvider>');
   return value;
 }

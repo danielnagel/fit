@@ -24,12 +24,12 @@ describe('POST /api/plan-weeks', () => {
   });
 
   it('starts a week and makes it active', async () => {
-    const plan = await createPlan(agent, { name: 'Mein Plan' });
+    const plan = await createPlan(agent, { name: 'My plan' });
 
     const res = await agent.post('/api/plan-weeks').send({ plan_id: plan.id });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ plan_id: plan.id, plan_name: 'Mein Plan', week_number: 1, sessions: [] });
+    expect(res.body).toMatchObject({ plan_id: plan.id, plan_name: 'My plan', week_number: 1, sessions: [] });
 
     const active = await agent.get('/api/plan-weeks/active');
     expect(active.body.id).toBe(res.body.id);
@@ -76,7 +76,7 @@ describe('PATCH /api/plan-weeks/:id', () => {
     const method = await createTrainingMethod(agent);
     const exercise = await createExercise(agent);
     const plan = await createPlan(agent, {
-      days: [{ name: 'Tag 1', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
+      days: [{ name: 'Day 1', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
     });
     const week = await startWeek(agent, plan.id);
     const planDetail = await agent.get(`/api/plans/${plan.id}`);

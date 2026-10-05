@@ -7,12 +7,12 @@ import { countByExercise, slotKey } from './blockRunnerUtils';
 
 type RestState = { key: string; seconds: number };
 
-// Ladder (Einheit = 1 Uebung, self-paced): Stoppuhr waehrend des Satzes, Wiederholungen beim
-// Satzende eintragen, danach Pause nach rest_formula. Der Stop-Bedingung entsprechend gibt es
-// keinen automatischen Rundenzaehler; die Einheit endet erst, wenn "Übung beenden" gedrückt wird
-// (Zeitbudget zeigt nur eine Kulanz-Restzeit an). Fuer den Zirkel (Einheit = alle Uebungen) siehe
-// stattdessen CircuitUnitRunner -- der hat ein grundlegend anderes UI (kein Reps-Eintrag, manueller
-// Rundenzaehler statt automatischer Rotation).
+// Ladder (unit = 1 exercise, self-paced): stopwatch during the set, enter reps at the end of
+// the set, then rest according to rest_formula. In line with the stop condition there's no
+// automatic round counter; the unit only ends when "Finish exercise" is pressed (the time
+// budget only shows a grace remaining time). For the circuit (unit = all exercises) see
+// CircuitUnitRunner instead -- it has a fundamentally different UI (no reps entry, manual
+// round counter instead of automatic rotation).
 export default function SelfPacedUnitRunner({
   unit,
   method,
@@ -93,8 +93,8 @@ export default function SelfPacedUnitRunner({
     return Math.max(1, Math.round(elapsed * (method.rest_factor ?? 1)));
   };
 
-  // Vorschau, was nach dem aktuellen Satz kommt: dieselbe Uebung mit der naechsthoeheren Stufe.
-  const nextStepLabel = `Nächste Stufe nach der Pause: Stufe ${step + 2}`;
+  // Preview of what comes after the current set: the same exercise with the next higher step.
+  const nextStepLabel = `Next step after the rest: step ${step + 2}`;
 
   const finishStep = async () => {
     if (!canFinishStep) return;
@@ -121,26 +121,26 @@ export default function SelfPacedUnitRunner({
     <div className="panel-accent flex w-full flex-col items-start gap-3">
       <p>
         <strong className="text-fg">{exercise.exercise_name}</strong>
-        <ExerciseInfo description={exercise.description} /> — Stufe {step + 1}
+        <ExerciseInfo description={exercise.description} /> — step {step + 1}
       </p>
       {exercise.note && <p className="hint">{exercise.note}</p>}
-      {lastLoggedSet && <p className="hint">Letzter Satz: {lastLoggedSet.reps ?? '–'} Wiederholungen</p>}
+      {lastLoggedSet && <p className="hint">Last set: {lastLoggedSet.reps ?? '–'} reps</p>}
       {record && (
         <p className="hint">
-          Bisherige Bestleistung: Stufe {record.max_stage + 1}
-          {record.best_reps != null && `, meiste Wiederholungen ${record.best_reps}`}
+          Personal best so far: step {record.max_stage + 1}
+          {record.best_reps != null && `, most reps ${record.best_reps}`}
         </p>
       )}
       {showBudget && (
         <p className="hint">
-          Zeitbudget verbleibend: {formatMmSs(remaining)}
-          {remaining <= 0 && ' (abgelaufen — aktuelle Einheit darf noch beendet werden)'}
+          Time budget left: {formatMmSs(remaining)}
+          {remaining <= 0 && ' (expired — the current unit may still be finished)'}
         </p>
       )}
 
       {phase === 'work' ? (
         <>
-          <p className="text-lg font-semibold tabular-nums text-accent">Arbeitszeit: {formatMmSs(stopwatch.elapsed)}</p>
+          <p className="text-lg font-semibold tabular-nums text-accent">Work time: {formatMmSs(stopwatch.elapsed)}</p>
           <form
             className="flex flex-wrap items-center gap-3"
             onSubmit={(e) => {
@@ -149,7 +149,7 @@ export default function SelfPacedUnitRunner({
             }}
           >
             <label className="flex items-center gap-2">
-              Wiederholungen{' '}
+              Reps{' '}
               <input
                 ref={repsInputRef}
                 type="number"
@@ -162,32 +162,32 @@ export default function SelfPacedUnitRunner({
             </label>
             {exercise.is_unilateral_active && (
               <label className="flex items-center gap-2">
-                Seite{' '}
+                Side{' '}
                 <select value={side} onChange={(e) => setSide(e.target.value as 'left' | 'right')} className="field w-28">
-                  <option value="left">links</option>
-                  <option value="right">rechts</option>
+                  <option value="left">left</option>
+                  <option value="right">right</option>
                 </select>
               </label>
             )}
             <button type="submit" className="btn-primary" disabled={!canFinishStep}>
-              Satz fertig
+              Set done
             </button>
           </form>
           <p className="hint">{nextStepLabel}</p>
         </>
       ) : (
         <p className="flex items-center gap-2">
-          Pause{' '}
+          Rest{' '}
           <Countdown
             seconds={effectiveRestSeconds}
             onComplete={() => setRestState(null)}
-            skipLabel="Pause abbrechen"
+            skipLabel="Skip rest"
             key={restState!.key}
           />
         </p>
       )}
       <button type="button" className="btn" onClick={finishUnit}>
-        Übung beenden
+        Finish exercise
       </button>
     </div>
   );

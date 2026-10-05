@@ -33,12 +33,12 @@ describe('CircuitUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Übung 1')).toBeInTheDocument();
-    expect(screen.getByText(/8-12 Wdh\./)).toBeInTheDocument();
-    expect(screen.getByText('Übung 2')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Wiederholungen')).not.toBeInTheDocument();
-    expect(screen.getByText('Gesamtzeit: 0:00')).toBeInTheDocument();
-    expect(screen.getByText(/Zeitbudget verbleibend: 20:00/)).toBeInTheDocument();
+    expect(screen.getByText('Exercise 1')).toBeInTheDocument();
+    expect(screen.getByText(/8-12 reps/)).toBeInTheDocument();
+    expect(screen.getByText('Exercise 2')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Reps')).not.toBeInTheDocument();
+    expect(screen.getByText('Total time: 0:00')).toBeInTheDocument();
+    expect(screen.getByText(/Time budget left: 20:00/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '0' })).toBeInTheDocument();
   });
 
@@ -87,8 +87,8 @@ describe('CircuitUnitRunner', () => {
     );
 
     expect(screen.getByRole('button', { name: '2' })).toBeInTheDocument();
-    expect(screen.getByText('Runde 1: 1:24')).toBeInTheDocument();
-    expect(screen.getByText('Runde 2: 1:34')).toBeInTheDocument();
+    expect(screen.getByText('Round 1: 1:24')).toBeInTheDocument();
+    expect(screen.getByText('Round 2: 1:34')).toBeInTheDocument();
   });
 
   it('finishes the unit for every member on its own once the time budget runs out', async () => {
@@ -126,7 +126,7 @@ describe('CircuitUnitRunner', () => {
     );
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Zirkel beenden' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Finish circuit' }));
     });
 
     expect(finishExercise).toHaveBeenCalledWith(1, undefined);

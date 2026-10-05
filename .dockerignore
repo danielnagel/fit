@@ -1,4 +1,4 @@
-# Build-Kontext ist das Repo-Root (npm workspaces, ein gemeinsames package-lock.json).
+# The build context is the repo root (npm workspaces, one shared package-lock.json).
 **/node_modules
 **/dist
 .env

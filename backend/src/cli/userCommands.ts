@@ -4,7 +4,7 @@ import { hashPassword } from '../auth/password.js';
 import { seedDefaultTrainingMethods } from '../defaultTrainingMethods.js';
 import { deleteUserWithData } from '../users.js';
 
-// Ein-/Ausgabe als Parameter, damit die Befehle in Tests ohne Terminal laufen.
+// Input/output as a parameter so the commands can run in tests without a terminal.
 export interface CliIo {
   out(line: string): void;
   err(line: string): void;
@@ -23,11 +23,11 @@ interface UserRow {
 }
 
 function label(user: UserRow) {
-  return user.username ?? `${user.name} (id ${user.id}, ohne Login)`;
+  return user.username ?? `${user.name} (id ${user.id}, no login)`;
 }
 
-// Akzeptiert eine numerische id, einen Benutzernamen oder -- fuer den Legacy-Default-User, der keinen
-// username hat -- dessen name.
+// Accepts a numeric id, a username or -- for the legacy default user, which has no
+// username -- its name.
 async function findUser(client: PoolClient | typeof pool, ref: string): Promise<UserRow | null> {
   const id = /^[0-9]+$/.test(ref) ? Number(ref) : null;
   const { rows } = await client.query<UserRow>(
@@ -43,38 +43,38 @@ async function findUser(client: PoolClient | typeof pool, ref: string): Promise<
 async function readNewPassword(io: CliIo, given: string | undefined): Promise<string | null> {
   if (given !== undefined) return given;
   if (!io.isTTY) {
-    io.err('Kein Passwort angegeben und keine interaktive Eingabe moeglich (stdin ist kein Terminal).');
+    io.err('No password given and interactive input is not possible (stdin is not a terminal).');
     return null;
   }
-  const password = await io.promptHidden('Passwort: ');
-  const repeated = await io.promptHidden('Passwort wiederholen: ');
+  const password = await io.promptHidden('Password: ');
+  const repeated = await io.promptHidden('Repeat password: ');
   if (password !== repeated) {
-    io.err('Die Passwoerter stimmen nicht ueberein.');
+    io.err('The passwords do not match.');
     return null;
   }
   return password;
 }
 
 function passwordError(password: string) {
-  return password.length < MIN_PASSWORD_LENGTH ? `Das Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen lang sein.` : null;
+  return password.length < MIN_PASSWORD_LENGTH ? `The password must be at least ${MIN_PASSWORD_LENGTH} characters long.` : null;
 }
 
 export async function createUser(io: CliIo, args: { username?: string; password?: string; seed: boolean }) {
   let username = args.username;
   if (username === undefined) {
     if (!io.isTTY) {
-      io.err('Aufruf: npm run user:create -- <username> <password> [--no-seed]');
-      io.err('Ohne Argumente wird interaktiv gefragt; dafuer muss stdin ein Terminal sein.');
+      io.err('Usage: npm run user:create -- <username> <password> [--no-seed]');
+      io.err('Without arguments you are prompted interactively; stdin has to be a terminal for that.');
       return 1;
     }
-    username = (await io.prompt('Benutzername: ')).trim();
+    username = (await io.prompt('Username: ')).trim();
   }
   if (!USERNAME_PATTERN.test(username)) {
-    io.err('Ungueltiger Benutzername (erlaubt: Buchstaben, Ziffern, ".", "_", "-"; max. 64 Zeichen).');
+    io.err('Invalid username (allowed: letters, digits, ".", "_", "-"; max. 64 characters).');
     return 1;
   }
   if (await findUser(pool, username)) {
-    io.err(`Es gibt bereits einen Benutzer "${username}".`);
+    io.err(`A user "${username}" already exists.`);
     return 1;
   }
 
@@ -96,7 +96,7 @@ export async function createUser(io: CliIo, args: { username?: string; password?
     );
     if (args.seed) await seedDefaultTrainingMethods(client, rows[0].id);
     await client.query('COMMIT');
-    io.out(`Benutzer angelegt: ${username} (id ${rows[0].id})${args.seed ? ', Standard-Trainingsmethoden angelegt' : ''}`);
+    io.out(`User created: ${username} (id ${rows[0].id})${args.seed ? ', default training methods created' : ''}`);
     return 0;
   } catch (err) {
     await client.query('ROLLBACK');
@@ -120,10 +120,10 @@ export async function listUsers(io: CliIo) {
   );
 
   for (const u of rows) {
-    const lastLogin = u.last_login_at ? u.last_login_at.toISOString() : 'nie';
+    const lastLogin = u.last_login_at ? u.last_login_at.toISOString() : 'never';
     io.out(
-      `${u.username ?? `${u.name} (ohne Login)`}  (id ${u.id}, angelegt ${u.created_at.toISOString()}, letzter Login ${lastLogin}; ` +
-        `${u.plans} Plaene, ${u.exercises} Uebungen, ${u.sessions} Sessions)`,
+      `${u.username ?? `${u.name} (no login)`}  (id ${u.id}, created ${u.created_at.toISOString()}, last login ${lastLogin}; ` +
+        `${u.plans} plans, ${u.exercises} exercises, ${u.sessions} sessions)`,
     );
   }
   return 0;
@@ -131,12 +131,12 @@ export async function listUsers(io: CliIo) {
 
 export async function setPassword(io: CliIo, args: { username?: string; password?: string }) {
   if (!args.username) {
-    io.err('Aufruf: npm run user:set-password -- <username> [<password>]');
+    io.err('Usage: npm run user:set-password -- <username> [<password>]');
     return 1;
   }
   const user = await findUser(pool, args.username);
   if (!user || !user.username) {
-    io.err(`Unbekannter Benutzer "${args.username}" (der Default-User kann kein Passwort bekommen).`);
+    io.err(`Unknown user "${args.username}" (the default user cannot get a password).`);
     return 1;
   }
 
@@ -149,29 +149,29 @@ export async function setPassword(io: CliIo, args: { username?: string; password
   }
 
   await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [await hashPassword(password), user.id]);
-  io.out(`Passwort fuer ${user.username} gesetzt.`);
+  io.out(`Password set for ${user.username}.`);
   return 0;
 }
 
 export async function deleteUser(io: CliIo, args: { ref?: string; yes: boolean }) {
   if (!args.ref) {
-    io.err('Aufruf: npm run user:delete -- <username|id> [--yes]');
+    io.err('Usage: npm run user:delete -- <username|id> [--yes]');
     return 1;
   }
   const user = await findUser(pool, args.ref);
   if (!user) {
-    io.err(`Unbekannter Benutzer "${args.ref}".`);
+    io.err(`Unknown user "${args.ref}".`);
     return 1;
   }
 
   if (!args.yes) {
     if (!io.isTTY) {
-      io.err('Loeschen ohne Terminal nur mit --yes.');
+      io.err('Deleting without a terminal requires --yes.');
       return 1;
     }
-    const answer = await io.prompt(`${label(user)} und ALLE zugehoerigen Daten loeschen? (ja/nein) `);
-    if (answer.trim().toLowerCase() !== 'ja') {
-      io.out('Abgebrochen.');
+    const answer = await io.prompt(`Delete ${label(user)} and ALL associated data? (yes/no) `);
+    if (answer.trim().toLowerCase() !== 'yes') {
+      io.out('Aborted.');
       return 1;
     }
   }
@@ -187,7 +187,7 @@ export async function deleteUser(io: CliIo, args: { ref?: string; yes: boolean }
   } finally {
     client.release();
   }
-  io.out(`Benutzer ${label(user)} geloescht.`);
+  io.out(`User ${label(user)} deleted.`);
   return 0;
 }
 
@@ -195,7 +195,7 @@ const OWNED_TABLES = ['plans', 'exercises', 'training_methods', 'plan_weeks'] as
 
 export async function assignData(io: CliIo, args: { from?: string; to?: string }) {
   if (!args.from || !args.to) {
-    io.err('Aufruf: npm run user:assign-data -- --from <username|id> --to <username>');
+    io.err('Usage: npm run user:assign-data -- --from <username|id> --to <username>');
     return 1;
   }
 
@@ -205,16 +205,16 @@ export async function assignData(io: CliIo, args: { from?: string; to?: string }
     const from = await findUser(client, args.from);
     const to = await findUser(client, args.to);
     if (!from || !to) {
-      io.err(`Unbekannter Benutzer "${!from ? args.from : args.to}".`);
+      io.err(`Unknown user "${!from ? args.from : args.to}".`);
       await client.query('ROLLBACK');
       return 1;
     }
     if (from.id === to.id) {
-      io.err('Quelle und Ziel sind derselbe Benutzer.');
+      io.err('Source and target are the same user.');
       await client.query('ROLLBACK');
       return 1;
     }
-    // Beide Benutzer sperren, damit parallel keine Daten dazukommen, die die Konfliktpruefung verpasst.
+    // Lock both users so no data gets added in parallel that the conflict check would miss.
     await client.query('SELECT 1 FROM users WHERE id = ANY($1) FOR UPDATE', [[from.id, to.id]]);
 
     const conflicts: string[] = [];
@@ -223,7 +223,7 @@ export async function assignData(io: CliIo, args: { from?: string; to?: string }
       [[from.id, to.id]],
     );
     if (activeWeeks.rows.length > 1) {
-      conflicts.push('Beide Benutzer haben eine aktive Woche (pro Benutzer ist nur eine erlaubt).');
+      conflicts.push('Both users have an active week (only one per user is allowed).');
     }
     const duplicateNames = await client.query<{ name: string }>(
       `SELECT name FROM exercises WHERE user_id = $1
@@ -233,10 +233,10 @@ export async function assignData(io: CliIo, args: { from?: string; to?: string }
       [from.id, to.id],
     );
     for (const { name } of duplicateNames.rows) {
-      conflicts.push(`Uebung "${name}" existiert bei beiden Benutzern.`);
+      conflicts.push(`Exercise "${name}" exists for both users.`);
     }
     if (conflicts.length > 0) {
-      io.err(`Abgebrochen, nichts wurde uebertragen. Konflikte:`);
+      io.err(`Aborted, nothing was moved. Conflicts:`);
       for (const conflict of conflicts) io.err(`  - ${conflict}`);
       await client.query('ROLLBACK');
       return 1;
@@ -249,7 +249,7 @@ export async function assignData(io: CliIo, args: { from?: string; to?: string }
     }
     await client.query('COMMIT');
 
-    io.out(`Daten von ${label(from)} auf ${label(to)} uebertragen:`);
+    io.out(`Moved data from ${label(from)} to ${label(to)}:`);
     for (const table of OWNED_TABLES) io.out(`  ${table}: ${moved[table]}`);
     return 0;
   } catch (err) {

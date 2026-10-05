@@ -1,16 +1,16 @@
--- Gleiches Problem wie bei logged_sets (siehe Migration 0015), nur fuer den "manuell beenden"-
--- Abschluss (stop_condition = all-exercises-done): eine Uebung kann als andere Variante
--- (festgehalten im plan_block_exercises.note, z.B. "leicht"/"schwer") mehrfach im selben Block
--- auftauchen. exercise_id allein identifiziert daher nicht zuverlaessig, welcher Slot beendet
--- wurde -- exercise_id ist nur die Taxonomie der Uebung, nicht die des Plan-Eintrags.
+-- Same problem as with logged_sets (see migration 0015), just for the "finish manually"
+-- completion (stop_condition = all-exercises-done): an exercise can appear several times
+-- in the same block as a different variant (recorded in plan_block_exercises.note, e.g.
+-- "light"/"heavy"). exercise_id alone therefore doesn't reliably identify which slot was
+-- finished -- exercise_id is only the exercise's taxonomy, not that of the plan entry.
 --
--- plan_block_exercise_id identifiziert wie bei logged_sets den konkreten Slot im eingefrorenen
--- day_snapshot. Bewusst ohne Foreign Key auf plan_block_exercises (Snapshot-Charakter, siehe
--- Migration 0015). Die alte Primaerschlüssel-Eindeutigkeit ueber (training_session_id,
--- exercise_id) reicht nicht mehr, da derselbe exercise_id jetzt mehrfach pro Session vorkommen
--- kann -- daher zwei partielle Unique-Indizes statt einer einzelnen Primaerschluessel-Spalte:
--- neue Zeilen werden pro Slot dedupliziert, bestehende (plan_block_exercise_id IS NULL) bleiben
--- wie bisher pro exercise_id dedupliziert.
+-- Like in logged_sets, plan_block_exercise_id identifies the concrete slot in the frozen
+-- day_snapshot. Deliberately without a foreign key to plan_block_exercises (snapshot nature, see
+-- migration 0015). The old primary key uniqueness over (training_session_id,
+-- exercise_id) is no longer sufficient, since the same exercise_id can now occur several times
+-- per session -- hence two partial unique indexes instead of a single primary key:
+-- new rows are deduplicated per slot, existing ones (plan_block_exercise_id IS NULL) stay
+-- deduplicated per exercise_id as before.
 ALTER TABLE session_finished_exercises DROP CONSTRAINT session_finished_exercises_pkey;
 ALTER TABLE session_finished_exercises ADD COLUMN plan_block_exercise_id INTEGER;
 

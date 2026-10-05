@@ -12,9 +12,9 @@ import { trainingMethodsRouter } from './routes/training-methods.js';
 export function createApp() {
   const app = express();
 
-  // Anzahl Reverse-Proxies vor dem Backend (0 = direkt erreichbar). Bestimmt, wie viele Eintraege
-  // aus X-Forwarded-For fuer req.ip vertraut werden; ohne korrekten Wert teilen sich alle Clients
-  // hinter dem Proxy einen Rate-Limit-Bucket, mit zu hohem Wert laesst sich der Header faelschen.
+  // Number of reverse proxies in front of the backend (0 = directly reachable). Determines how many
+  // X-Forwarded-For entries are trusted for req.ip; with a wrong value all clients behind the proxy
+  // share one rate limit bucket, with a value too high the header can be spoofed.
   app.set('trust proxy', Number.parseInt(process.env.TRUST_PROXY_HOPS ?? '0', 10));
 
   app.use(express.json());

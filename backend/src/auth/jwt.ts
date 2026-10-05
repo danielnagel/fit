@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 export const AUTH_COOKIE = 'token';
 
-// Grosszuegig, weil man sich beim Training nicht staendig neu einloggen will.
+// Generous, because you don't want to log in again and again while training.
 export const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface AuthUser {
@@ -13,7 +13,7 @@ export interface AuthUser {
 
 function secret(): string {
   const value = process.env.JWT_SECRET;
-  if (!value) throw new Error('JWT_SECRET ist nicht gesetzt');
+  if (!value) throw new Error('JWT_SECRET is not set');
   return value;
 }
 

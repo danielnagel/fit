@@ -65,7 +65,7 @@ describe('POST /api/auth/demo', () => {
   it('produces history that shows progress and lets a training be started right away', async () => {
     const { agent } = await startDemo();
     const exercises = (await agent.get('/api/exercises')).body as { id: number; name: string }[];
-    const squat = exercises.find((e) => e.name === 'Kniebeuge')!;
+    const squat = exercises.find((e) => e.name === 'Squat')!;
 
     const progress = (await agent.get(`/api/exercises/${squat.id}/progress`)).body as { max_reps: number }[];
     expect(progress.map((p) => p.max_reps)).toEqual([11, 12, 13]);
@@ -73,7 +73,7 @@ describe('POST /api/auth/demo', () => {
     const plan = (await agent.get(`/api/plans/${(await agent.get('/api/plans')).body[0].id}`)).body;
     const session = await agent.post('/api/sessions').send({ plan_day_id: plan.days[0].id });
     expect(session.status).toBe(201);
-    // Rekord aus der Stufensatz-Historie (Woche 3: 6 Stufen, Index 0-5).
+    // Record from the ladder history (week 3: 6 steps, index 0-5).
     expect(session.body.records).toEqual([expect.objectContaining({ max_stage: 5, best_reps: 6 })]);
     expect(session.body.previous_logged_sets.length).toBeGreaterThan(0);
   });

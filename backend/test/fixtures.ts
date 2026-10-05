@@ -6,7 +6,7 @@ import { hashPassword } from '../src/auth/password.js';
 export type Agent = request.Agent;
 
 export const TEST_PASSWORD = 'test-password';
-// scrypt ist absichtlich langsam; der Hash wird einmal pro Testlauf berechnet und wiederverwendet.
+// scrypt is deliberately slow; the hash is computed once per test run and reused.
 const testPasswordHash = hashPassword(TEST_PASSWORD);
 
 let counter = 0;
@@ -23,12 +23,12 @@ export async function createUser(username = unique('user').replace(' ', '-')) {
   return rows[0];
 }
 
-// Liefert einen supertest-Agent, der das Login-Cookie traegt; ohne username wird ein neuer User angelegt.
+// Returns a supertest agent carrying the login cookie; without a username a new user is created.
 export async function loginAgent(app: Express, username?: string): Promise<Agent> {
   const user = username ?? (await createUser()).username;
   const agent = request.agent(app);
   const res = await agent.post('/api/auth/login').send({ username: user, password: TEST_PASSWORD });
-  if (res.status !== 200) throw new Error(`Test-Login fehlgeschlagen: ${JSON.stringify(res.body)}`);
+  if (res.status !== 200) throw new Error(`Test login failed: ${JSON.stringify(res.body)}`);
   return agent;
 }
 
@@ -39,7 +39,7 @@ export async function createExercise(
   const res = await agent
     .post('/api/exercises')
     .send({
-      name: overrides.name ?? unique('Übung'),
+      name: overrides.name ?? unique('Exercise'),
       description: overrides.description ?? null,
       is_unilateral: overrides.is_unilateral ?? false,
     });
@@ -48,7 +48,7 @@ export async function createExercise(
 
 export async function createTrainingMethod(agent: Agent, overrides: Record<string, unknown> = {}) {
   const base = {
-    name: unique('Methode'),
+    name: unique('Method'),
     scope: 'single',
     timing_family: 'fixed-window-remainder',
     window_seconds: 180,
@@ -80,12 +80,12 @@ export async function endWeek(agent: Agent, weekId: number) {
   return agent.patch(`/api/plan-weeks/${weekId}`);
 }
 
-// Komplettes Datenset eines Benutzers: Methode, Uebung, Plan mit Tag, aktive Woche, Session mit einem Satz.
+// Complete data set of one user: method, exercise, plan with a day, active week, session with one set.
 export async function createFullData(agent: Agent) {
   const method = await createTrainingMethod(agent);
-  const exercise = await createExercise(agent, { name: 'Kniebeuge' });
+  const exercise = await createExercise(agent, { name: 'Squat' });
   const plan = await createPlan(agent, {
-    days: [{ name: 'Tag 1', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
+    days: [{ name: 'Day 1', blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }] }],
   });
   const week = await startWeek(agent, plan.id);
   const planDayId = plan.days[0].id;

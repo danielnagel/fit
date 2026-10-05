@@ -8,8 +8,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      # fuer den lokalen Dev-Modus (npm run dev), in dem Backend/Frontend ausserhalb von Docker laufen;
-      # nur an localhost gebunden, Docker umgeht sonst die Host-Firewall.
+      # for the local dev mode (npm run dev), in which backend/frontend run outside of Docker;
+      # only bound to localhost, Docker would otherwise bypass the host firewall.
       - "127.0.0.1:5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -22,7 +22,7 @@ services:
       - internal
 
   fit-backend:
-    # Dev-Target mit tsx/Hot-Reload; das Default-Target des Dockerfiles ist das Prod-Image.
+    # Dev target with tsx/hot reload; the Dockerfile's default target is the prod image.
     build:
       context: .
       dockerfile: backend/Dockerfile

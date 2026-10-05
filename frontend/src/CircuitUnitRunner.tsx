@@ -5,10 +5,10 @@ import TapCounter from './TapCounter';
 import { anchorElapsedSeconds, useStopwatch, formatMmSs } from './useTimer';
 import { countByExercise, slotKey, unitRoundCount } from './blockRunnerUtils';
 
-// Zirkel (scope "all", self-paced): keine Wiederholungen eintragen -- die sind je Uebung schon
-// durch reps_min/reps_max vorgegeben. Man macht alle gelisteten Uebungen einmal durch und zaehlt
-// die Runde danach manuell hoch; im Fokus steht die Gesamtzeit, nicht ein Timer je Satz oder
-// automatische Pausen. Nach Ablauf des Zeitbudgets wird die Einheit automatisch beendet.
+// Circuit (scope "all", self-paced): no reps to enter -- they're already given per exercise
+// by reps_min/reps_max. You go through all listed exercises once and count the round up
+// manually afterwards; the focus is on the total time, not a timer per set or automatic
+// rests. Once the time budget is used up, the unit ends automatically.
 export default function CircuitUnitRunner({ unit, method, session, phaseKeyBase, logSet, finishExercise, setTimerAnchor }: UnitRunnerProps) {
   const counts = countByExercise(unit, session.logged_sets);
   const round = unitRoundCount(unit, counts);
@@ -44,8 +44,8 @@ export default function CircuitUnitRunner({ unit, method, session, phaseKeyBase,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remaining]);
 
-  // Rundenzeiten werden als completed_seconds auf jeder Uebung der Runde geloggt (reps bleibt
-  // leer, siehe oben), damit die Liste einen Reload uebersteht statt nur im Komponenten-State zu leben.
+  // Round times are logged as completed_seconds on every exercise of the round (reps stays
+  // empty, see above) so the list survives a reload instead of only living in component state.
   const roundTimes: number[] = [];
   for (let r = 0; r < round; r++) {
     const entry = session.logged_sets.find((l) => l.unit_index === r && unit.some((ex) => slotKey(ex) === slotKey(l)));
@@ -67,30 +67,30 @@ export default function CircuitUnitRunner({ unit, method, session, phaseKeyBase,
           <li key={exercise.plan_block_exercise_id ?? exercise.exercise_id}>
             <strong className="text-fg">{exercise.exercise_name}</strong>
             <ExerciseInfo description={exercise.description} />
-            {exercise.reps_min != null && ` — ${exercise.reps_min}-${exercise.reps_max} Wdh.`}
+            {exercise.reps_min != null && ` — ${exercise.reps_min}-${exercise.reps_max} reps`}
             {exercise.note && <span className="hint"> ({exercise.note})</span>}
           </li>
         ))}
       </ul>
-      <p className="text-lg font-semibold tabular-nums text-accent">Gesamtzeit: {formatMmSs(budgetTimer.elapsed)}</p>
+      <p className="text-lg font-semibold tabular-nums text-accent">Total time: {formatMmSs(budgetTimer.elapsed)}</p>
       {budgetSeconds > 0 && (
         <p className="hint">
-          Zeitbudget verbleibend: {formatMmSs(Math.max(0, remaining))}
-          {remaining <= 0 && ' (abgelaufen — Zirkel wird beendet)'}
+          Time budget left: {formatMmSs(Math.max(0, remaining))}
+          {remaining <= 0 && ' (expired — circuit is being finished)'}
         </p>
       )}
-      <TapCounter label="Runden" count={round} onIncrement={finishRound} />
+      <TapCounter label="Rounds" count={round} onIncrement={finishRound} />
       {roundTimes.length > 0 && (
         <ul className="hint flex flex-col">
           {roundTimes.map((seconds, i) => (
             <li key={i}>
-              Runde {i + 1}: {formatMmSs(seconds)}
+              Round {i + 1}: {formatMmSs(seconds)}
             </li>
           ))}
         </ul>
       )}
       <button type="button" className="btn" onClick={finishUnit}>
-        Zirkel beenden
+        Finish circuit
       </button>
     </div>
   );

@@ -1,7 +1,7 @@
 import { randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from 'node:crypto';
 
-// Format: scrypt$N$r$p$<salt base64>$<hash base64>. Parameter stehen im Hash, damit sie spaeter
-// erhoeht werden koennen, ohne bestehende Passwoerter ungueltig zu machen.
+// Format: scrypt$N$r$p$<salt base64>$<hash base64>. The parameters are stored in the hash so they can
+// be raised later without invalidating existing passwords.
 const N = 2 ** 15;
 const R = 8;
 const P = 1;
@@ -9,7 +9,7 @@ const KEY_LENGTH = 64;
 const SALT_LENGTH = 16;
 
 function deriveKey(password: string, salt: Buffer, options: ScryptOptions): Promise<Buffer> {
-  // scrypt braucht ca. 128 * N * r Bytes; das Default-Limit (32 MiB) reicht fuer N=2^15 nicht.
+  // scrypt needs about 128 * N * r bytes; the default limit (32 MiB) isn't enough for N=2^15.
   const maxmem = 256 * (options.N ?? N) * (options.r ?? R);
   return new Promise((resolve, reject) => {
     scrypt(password, salt, KEY_LENGTH, { ...options, maxmem }, (err, key) => (err ? reject(err) : resolve(key)));
@@ -31,11 +31,11 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
   return key.length === expected.length && timingSafeEqual(key, expected);
 }
 
-// Fuer unbekannte Benutzernamen wird gegen diesen Hash geprueft, damit der Login gleich lange dauert
-// wie bei einem falschen Passwort und sich existierende Benutzernamen nicht per Timing erraten lassen.
+// Unknown usernames are checked against this hash so that the login takes as long as with a wrong
+// password and existing usernames can't be guessed via timing.
 const DUMMY_PASSWORD_HASH = await hashPassword('dummy-password-for-timing-parity');
 
-// Als Objekt exportiert, damit Tests den Aufruf per vi.spyOn beobachten koennen (ESM-Exporte sind nicht patchbar).
+// Exported as an object so tests can observe the call via vi.spyOn (ESM exports can't be patched).
 export const passwords = {
   verify: verifyPassword,
   dummyHash: DUMMY_PASSWORD_HASH,

@@ -116,7 +116,7 @@ describe('POST /api/training-methods validation', () => {
 describe('POST /api/training-methods normalization', () => {
   it('nulls out fields irrelevant to the chosen timing_family/stop_condition', async () => {
     const res = await agent.post('/api/training-methods').send({
-      name: 'Fenster-Methode',
+      name: 'Window method',
       scope: 'single',
       timing_family: 'fixed-window-remainder',
       window_seconds: 90,
@@ -138,12 +138,12 @@ describe('POST /api/training-methods normalization', () => {
 
 describe('PUT /api/training-methods/:id', () => {
   it('updates a method', async () => {
-    const method = await createTrainingMethod(agent, { name: 'Alt' });
+    const method = await createTrainingMethod(agent, { name: 'Old' });
 
     const res = await agent
       .put(`/api/training-methods/${method.id}`)
       .send({
-        name: 'Neu',
+        name: 'New',
         scope: 'single',
         timing_family: 'fixed-window-remainder',
         window_seconds: 120,
@@ -152,14 +152,14 @@ describe('PUT /api/training-methods/:id', () => {
       });
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ name: 'Neu', window_seconds: 120, rounds: 5 });
+    expect(res.body).toMatchObject({ name: 'New', window_seconds: 120, rounds: 5 });
   });
 
   it('returns 404 for an unknown id', async () => {
     const res = await agent
       .put('/api/training-methods/999999')
       .send({
-        name: 'Neu',
+        name: 'New',
         scope: 'single',
         timing_family: 'fixed-window-remainder',
         window_seconds: 120,
@@ -188,7 +188,7 @@ describe('DELETE /api/training-methods/:id', () => {
     await createPlan(agent, {
       days: [
         {
-          name: 'Tag 1',
+          name: 'Day 1',
           blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }],
         },
       ],

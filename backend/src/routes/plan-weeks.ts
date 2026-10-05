@@ -31,14 +31,14 @@ planWeeksRouter.get('/active', async (req, res) => {
 planWeeksRouter.post('/', async (req, res) => {
   const { plan_id: planId } = (req.body ?? {}) as { plan_id?: number };
   if (!Number.isInteger(planId)) {
-    res.status(400).json({ message: 'plan_id ist erforderlich' });
+    res.status(400).json({ message: 'plan_id is required' });
     return;
   }
 
   const userId = currentUser(req).id;
   const planResult = await pool.query('SELECT 1 FROM plans WHERE id = $1 AND user_id = $2', [planId, userId]);
   if (planResult.rows.length === 0) {
-    res.status(404).json({ message: 'Plan nicht gefunden' });
+    res.status(404).json({ message: 'Plan not found' });
     return;
   }
 
@@ -57,7 +57,7 @@ planWeeksRouter.post('/', async (req, res) => {
     res.status(201).json(await loadActiveWeek(userId));
   } catch (err) {
     if ((err as { code?: string }).code === '23505') {
-      res.status(409).json({ message: 'Es läuft bereits eine Woche — erst beenden' });
+      res.status(409).json({ message: 'A week is already running — end it first' });
       return;
     }
     res.status(500).json({ message: (err as Error).message });
@@ -76,7 +76,7 @@ planWeeksRouter.patch('/:id', async (req, res) => {
     [weekId, userId],
   );
   if (inProgressResult.rows[0].count > 0) {
-    res.status(409).json({ message: 'Es gibt noch ein laufendes Training in dieser Woche' });
+    res.status(409).json({ message: 'There is still a training in progress in this week' });
     return;
   }
 
@@ -85,7 +85,7 @@ planWeeksRouter.patch('/:id', async (req, res) => {
     [weekId, userId],
   );
   if (result.rowCount === 0) {
-    res.status(404).json({ message: 'Aktive Woche nicht gefunden' });
+    res.status(404).json({ message: 'Active week not found' });
     return;
   }
   res.status(204).send();

@@ -76,7 +76,7 @@ export default function Plans() {
     const res = await apiFetch(`/api/plans/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     if (expandedId === pendingDeleteId) setExpandedId(null);
@@ -85,8 +85,8 @@ export default function Plans() {
 
   return (
     <section className="card">
-      <h2 className="mb-4">Trainingspläne</h2>
-      {error && <p className="mb-3 text-sm text-danger">Fehler: {error}</p>}
+      <h2 className="mb-4">Training plans</h2>
+      {error && <p className="mb-3 text-sm text-danger">Error: {error}</p>}
 
       {mode === 'form' && (
         <PlanForm planId={editingId} exercises={exercises} onDone={closeForm} onCancel={closeForm} />
@@ -99,31 +99,31 @@ export default function Plans() {
               <li key={plan.id} className="flex flex-col gap-3 rounded-xl border border-edge bg-surface-2 px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <strong className="text-fg">{plan.name}</strong>
-                  <span className="hint">– {plan.day_count} Trainingstag(e)</span>
+                  <span className="hint">– {plan.day_count} training day{plan.day_count === 1 ? '' : 's'}</span>
                   <div className="ml-auto flex gap-2">
                     <button type="button" className="btn" onClick={() => toggleExpand(plan.id)}>
-                      {expandedId === plan.id ? 'Details ausblenden' : 'Details'}
+                      {expandedId === plan.id ? 'Hide details' : 'Details'}
                     </button>
                     <button type="button" className="btn" onClick={() => openEdit(plan.id)}>
-                      Bearbeiten
+                      Edit
                     </button>
                     <button type="button" className="btn-danger" onClick={() => requestDelete(plan.id)}>
-                      Löschen
+                      Delete
                     </button>
                   </div>
                 </div>
                 {expandedId === plan.id &&
-                  (!details[plan.id] ? <p className="hint">Lade Details...</p> : <PlanDetail plan={details[plan.id]} />)}
+                  (!details[plan.id] ? <p className="hint">Loading details...</p> : <PlanDetail plan={details[plan.id]} />)}
               </li>
             ))}
           </ul>
           <button type="button" className="btn-primary" onClick={openNew}>
-            Neuer Plan
+            New plan
           </button>
         </>
       )}
 
-      <ConfirmDialog ref={deleteDialogRef} message="Plan wirklich löschen?" onConfirm={handleDelete} />
+      <ConfirmDialog ref={deleteDialogRef} message="Really delete this plan?" onConfirm={handleDelete} />
     </section>
   );
 }

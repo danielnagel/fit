@@ -18,13 +18,13 @@ describe('DurationInput', () => {
   it('splits seconds into minutes and seconds fields', () => {
     render(<DurationInput seconds="90" onChange={() => {}} />);
     expect(screen.getByPlaceholderText('min')).toHaveValue(1);
-    expect(screen.getByPlaceholderText('sek')).toHaveValue(30);
+    expect(screen.getByPlaceholderText('sec')).toHaveValue(30);
   });
 
   it('shows empty fields when seconds is an empty string', () => {
     render(<DurationInput seconds="" onChange={() => {}} />);
     expect(screen.getByPlaceholderText('min')).toHaveValue(null);
-    expect(screen.getByPlaceholderText('sek')).toHaveValue(null);
+    expect(screen.getByPlaceholderText('sec')).toHaveValue(null);
   });
 
   it('combines minutes and seconds input into total seconds', async () => {
@@ -34,7 +34,7 @@ describe('DurationInput', () => {
     await user.type(screen.getByPlaceholderText('min'), '2');
     expect(screen.getByTestId('seconds-value')).toHaveTextContent('120');
 
-    await user.type(screen.getByPlaceholderText('sek'), '5');
+    await user.type(screen.getByPlaceholderText('sec'), '5');
     expect(screen.getByTestId('seconds-value')).toHaveTextContent('125');
   });
 
@@ -43,7 +43,7 @@ describe('DurationInput', () => {
     render(<Wrapper initial="90" />);
 
     await user.clear(screen.getByPlaceholderText('min'));
-    await user.clear(screen.getByPlaceholderText('sek'));
+    await user.clear(screen.getByPlaceholderText('sec'));
 
     expect(screen.getByTestId('seconds-value')).toHaveTextContent('0');
   });

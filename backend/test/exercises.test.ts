@@ -11,29 +11,29 @@ beforeEach(async () => {
 
 describe('GET /api/exercises', () => {
   it('returns exercises sorted by name', async () => {
-    await createExercise(agent, { name: 'Zebra-Übung' });
-    await createExercise(agent, { name: 'Anfangs-Übung' });
+    await createExercise(agent, { name: 'Zebra exercise' });
+    await createExercise(agent, { name: 'Alpha exercise' });
 
     const res = await agent.get('/api/exercises');
 
     expect(res.status).toBe(200);
-    expect(res.body.map((e: { name: string }) => e.name)).toEqual(['Anfangs-Übung', 'Zebra-Übung']);
+    expect(res.body.map((e: { name: string }) => e.name)).toEqual(['Alpha exercise', 'Zebra exercise']);
   });
 });
 
 describe('POST /api/exercises', () => {
   it('creates an exercise', async () => {
-    const res = await agent.post('/api/exercises').send({ name: 'Kniebeuge', description: 'mit Pause' });
+    const res = await agent.post('/api/exercises').send({ name: 'Squat', description: 'with a pause' });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ name: 'Kniebeuge', description: 'mit Pause', is_unilateral: false });
+    expect(res.body).toMatchObject({ name: 'Squat', description: 'with a pause', is_unilateral: false });
     expect(res.body.id).toBeTypeOf('number');
   });
 
   it('creates an exercise marked as unilateral', async () => {
     const res = await agent
       .post('/api/exercises')
-      .send({ name: 'Einarmiges Rudern', is_unilateral: true });
+      .send({ name: 'One-arm row', is_unilateral: true });
 
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ is_unilateral: true });
@@ -47,9 +47,9 @@ describe('POST /api/exercises', () => {
   });
 
   it('rejects a duplicate name', async () => {
-    await createExercise(agent, { name: 'Liegestütz' });
+    await createExercise(agent, { name: 'Push-up' });
 
-    const res = await agent.post('/api/exercises').send({ name: 'Liegestütz' });
+    const res = await agent.post('/api/exercises').send({ name: 'Push-up' });
 
     expect(res.status).toBe(409);
   });
@@ -57,14 +57,14 @@ describe('POST /api/exercises', () => {
 
 describe('PUT /api/exercises/:id', () => {
   it('updates an exercise', async () => {
-    const exercise = await createExercise(agent, { name: 'Altname' });
+    const exercise = await createExercise(agent, { name: 'Old name' });
 
     const res = await agent
       .put(`/api/exercises/${exercise.id}`)
-      .send({ name: 'Neuname', description: 'neu', is_unilateral: true });
+      .send({ name: 'New name', description: 'neu', is_unilateral: true });
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ name: 'Neuname', description: 'neu', is_unilateral: true });
+    expect(res.body).toMatchObject({ name: 'New name', description: 'neu', is_unilateral: true });
   });
 
   it('returns 404 for an unknown id', async () => {
@@ -73,10 +73,10 @@ describe('PUT /api/exercises/:id', () => {
   });
 
   it('rejects a rename onto an existing name', async () => {
-    await createExercise(agent, { name: 'Eins' });
-    const other = await createExercise(agent, { name: 'Zwei' });
+    await createExercise(agent, { name: 'One' });
+    const other = await createExercise(agent, { name: 'Two' });
 
-    const res = await agent.put(`/api/exercises/${other.id}`).send({ name: 'Eins' });
+    const res = await agent.put(`/api/exercises/${other.id}`).send({ name: 'One' });
 
     expect(res.status).toBe(409);
   });
@@ -102,7 +102,7 @@ describe('DELETE /api/exercises/:id', () => {
     await createPlan(agent, {
       days: [
         {
-          name: 'Tag 1',
+          name: 'Day 1',
           blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: exercise.id }] }],
         },
       ],

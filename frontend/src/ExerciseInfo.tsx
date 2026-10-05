@@ -14,7 +14,7 @@ export default function ExerciseInfo({ description }: Props) {
       <button
         type="button"
         className="flex size-5 items-center justify-center rounded-full border border-edge bg-surface-3 text-xs font-semibold italic text-fg-muted transition-colors hover:border-accent hover:text-accent"
-        aria-label="Übungsbeschreibung anzeigen"
+        aria-label="Show exercise description"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >

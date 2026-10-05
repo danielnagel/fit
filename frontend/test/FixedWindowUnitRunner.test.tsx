@@ -45,8 +45,8 @@ describe('FixedWindowUnitRunner', () => {
   it('shows the exercise, the round label and posts a timer anchor for the window', () => {
     const { setTimerAnchor } = renderRunner();
 
-    expect(screen.getByText('Übung 1')).toBeInTheDocument();
-    expect(screen.getByText(/Satz 1\/3/)).toBeInTheDocument();
+    expect(screen.getByText('Exercise 1')).toBeInTheDocument();
+    expect(screen.getByText(/set 1\/3/)).toBeInTheDocument();
     expect(screen.getByText('1:30')).toBeInTheDocument();
     expect(setTimerAnchor).toHaveBeenCalledWith('primary', 'b0-u0-0', 90);
   });
@@ -55,8 +55,8 @@ describe('FixedWindowUnitRunner', () => {
     const logSet = vi.fn();
     renderRunner({ logSet });
 
-    fireEvent.change(screen.getByLabelText('Wiederholungen'), { target: { value: '9' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Weiter' }));
+    fireEvent.change(screen.getByLabelText('Reps'), { target: { value: '9' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(logSet).toHaveBeenCalledWith(1, undefined, 0, 9, null);
   });
@@ -75,10 +75,10 @@ describe('FixedWindowUnitRunner', () => {
     renderRunner({ logSet });
 
     act(() => vi.advanceTimersByTime(20_000));
-    fireEvent.click(screen.getByRole('button', { name: 'Abgeschlossen' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Completed' }));
 
-    fireEvent.change(screen.getByLabelText('Wiederholungen'), { target: { value: '8' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Weiter' }));
+    fireEvent.change(screen.getByLabelText('Reps'), { target: { value: '8' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(logSet).toHaveBeenCalledWith(1, undefined, 0, 8, 20);
   });
@@ -86,18 +86,18 @@ describe('FixedWindowUnitRunner', () => {
   it('does not show a side selector for exercises without an active unilateral flag', () => {
     renderRunner();
 
-    expect(screen.queryByLabelText('Seite')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Side')).not.toBeInTheDocument();
   });
 
-  it('shows a side selector defaulting to links and logs the chosen side', () => {
+  it('shows a side selector defaulting to left and logs the chosen side', () => {
     const logSet = vi.fn();
     renderRunner({ logSet, unit: [exerciseFixture(1, { is_unilateral_active: true })] });
 
-    expect(screen.getByLabelText('Seite')).toHaveValue('left');
+    expect(screen.getByLabelText('Side')).toHaveValue('left');
 
-    fireEvent.change(screen.getByLabelText('Wiederholungen'), { target: { value: '9' } });
-    fireEvent.change(screen.getByLabelText('Seite'), { target: { value: 'right' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Weiter' }));
+    fireEvent.change(screen.getByLabelText('Reps'), { target: { value: '9' } });
+    fireEvent.change(screen.getByLabelText('Side'), { target: { value: 'right' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(logSet).toHaveBeenCalledWith(1, undefined, 0, 9, null, 'right');
   });
@@ -116,7 +116,7 @@ describe('FixedWindowUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Letzter Satz nach 0:42 abgeschlossen')).toBeInTheDocument();
+    expect(screen.getByText('Last set completed after 0:42')).toBeInTheDocument();
   });
 
   it('previews another round of the same exercise when more rounds remain', () => {
@@ -124,7 +124,7 @@ describe('FixedWindowUnitRunner', () => {
       method: methodFixture({ timing_family: 'fixed-window-remainder', window_seconds: 90, stop_condition: 'fixed-count', rounds: 3 }),
     });
 
-    expect(screen.getByText('Nochmal: Übung 1 (Satz 2/3)')).toBeInTheDocument();
+    expect(screen.getByText('Again: Exercise 1 (set 2/3)')).toBeInTheDocument();
   });
 
   it('previews the next exercise once the last round of the unit is reached', () => {
@@ -133,7 +133,7 @@ describe('FixedWindowUnitRunner', () => {
       nextUnit: [exerciseFixture(2)],
     });
 
-    expect(screen.getByText('Nächste Übung: Übung 2')).toBeInTheDocument();
+    expect(screen.getByText('Next exercise: Exercise 2')).toBeInTheDocument();
   });
 
   it('shows there is nothing left in the block on the last round without a next unit', () => {
@@ -142,6 +142,6 @@ describe('FixedWindowUnitRunner', () => {
       nextUnit: null,
     });
 
-    expect(screen.getByText('Letzter Satz in diesem Block')).toBeInTheDocument();
+    expect(screen.getByText('Last set in this block')).toBeInTheDocument();
   });
 });

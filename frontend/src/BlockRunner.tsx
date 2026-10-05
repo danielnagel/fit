@@ -5,12 +5,12 @@ import FixedWindowUnitRunner from './FixedWindowUnitRunner';
 import FixedWorkRestUnitRunner from './FixedWorkRestUnitRunner';
 import SelfPacedUnitRunner from './SelfPacedUnitRunner';
 
-// Interpretiert die 4 Dimensionen einer Trainingsmethode zur Laufzeit statt auf einen festen
-// Typ-String zu verzweigen: gruppiert die Uebungen des Blocks laut scope in Einheiten, ermittelt
-// die erste noch nicht abgeschlossene Einheit und dispatcht je timing_family an einen der
-// generischen Runner. self-paced mit mehr als einer Uebung in der Einheit (scope "all", der
-// Zirkel) hat ein grundlegend anderes UI als self-paced mit einer Uebung (scope "single", die
-// Stufenleiter) -- siehe CircuitUnitRunner vs. SelfPacedUnitRunner.
+// Interprets the 4 dimensions of a training method at runtime instead of branching on a fixed
+// type string: groups the block's exercises into units according to scope, finds the first
+// unit that isn't completed yet and dispatches per timing_family to one of the generic
+// runners. self-paced with more than one exercise in the unit (scope "all", the circuit)
+// has a fundamentally different UI than self-paced with one exercise (scope "single", the
+// ladder) -- see CircuitUnitRunner vs. SelfPacedUnitRunner.
 export default function BlockRunner({ session, block, phaseKeyBase, logSet, finishExercise, setTimerAnchor }: BlockRunnerProps) {
   const method = block.training_method;
   const units = computeUnits(method.scope, block.exercises);

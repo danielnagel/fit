@@ -17,7 +17,7 @@ const PADDING = 32;
 export default function ProgressChart({ points }: Props) {
   const usable = points.filter((p) => p.max_reps !== null);
   if (usable.length === 0) {
-    return <p className="hint mt-3">Noch keine abgeschlossenen Sätze mit Wiederholungen für diese Übung.</p>;
+    return <p className="hint mt-3">No completed sets with reps for this exercise yet.</p>;
   }
 
   const maxReps = Math.max(...usable.map((p) => p.max_reps!));
@@ -42,7 +42,7 @@ export default function ProgressChart({ points }: Props) {
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       width="100%"
       role="img"
-      aria-label="Fortschritt (beste Wiederholungszahl je Training)"
+      aria-label="Progress (best rep count per training)"
       className="mt-3 rounded-xl border border-edge bg-surface-2 p-2"
     >
       <line x1={PADDING} y1={HEIGHT - PADDING} x2={WIDTH - PADDING} y2={HEIGHT - PADDING} className="stroke-edge" />
@@ -50,7 +50,7 @@ export default function ProgressChart({ points }: Props) {
       {coords.map((c) => (
         <circle key={c.point.training_session_id} cx={c.x} cy={c.y} r={4} className="fill-accent">
           <title>
-            {new Date(c.point.performed_at).toLocaleDateString('de-DE')}: {c.point.max_reps} Wdh. (beste Serie)
+            {new Date(c.point.performed_at).toLocaleDateString('en-GB')}: {c.point.max_reps} reps (best set)
           </title>
         </circle>
       ))}

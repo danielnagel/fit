@@ -8,7 +8,7 @@ type Props = {
   onConfirm: () => void;
 };
 
-const ConfirmDialog = forwardRef<ConfirmDialogHandle, Props>(({ message, confirmLabel = 'Löschen', onConfirm }, ref) => {
+const ConfirmDialog = forwardRef<ConfirmDialogHandle, Props>(({ message, confirmLabel = 'Delete', onConfirm }, ref) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -23,7 +23,7 @@ const ConfirmDialog = forwardRef<ConfirmDialogHandle, Props>(({ message, confirm
       <p>{message}</p>
       <div className="mt-5 flex justify-end gap-2">
         <button type="button" className="btn" onClick={() => dialogRef.current?.close()}>
-          Abbrechen
+          Cancel
         </button>
         <button
           type="button"

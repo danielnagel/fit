@@ -11,7 +11,7 @@ function jsonResponse(body: unknown, ok = true, status = ok ? 200 : 400) {
 function method(overrides: Partial<TrainingMethod> = {}): TrainingMethod {
   return {
     id: 1,
-    name: 'Zirkel',
+    name: 'Circuit',
     scope: 'single',
     timing_family: 'fixed-window-remainder',
     window_seconds: 180,
@@ -38,7 +38,7 @@ afterEach(() => {
 });
 
 function createFormContainer() {
-  return screen.getByRole('heading', { name: 'Neue Methode' }).closest('form')!;
+  return screen.getByRole('heading', { name: 'New method' }).closest('form')!;
 }
 
 describe('TrainingMethods', () => {
@@ -47,54 +47,54 @@ describe('TrainingMethods', () => {
 
     render(<TrainingMethods />);
 
-    expect(await screen.findByText('Zirkel')).toBeInTheDocument();
-    expect(screen.getByText('Einzelübung · Festes Zeitfenster je Runde · 3 Runden', { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText('Circuit')).toBeInTheDocument();
+    expect(screen.getByText('Single exercise · Fixed time window per round · 3 rounds', { exact: false })).toBeInTheDocument();
   });
 
   it('shows only the fields relevant to the selected timing family and stop condition', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
     render(<TrainingMethods />);
-    await screen.findByRole('heading', { name: 'Neue Methode' });
+    await screen.findByRole('heading', { name: 'New method' });
 
     const form = createFormContainer();
     const durationLabel = (text: string) => within(form).getByText(text, { exact: false, selector: 'label' });
     const noDurationLabel = (text: string) => within(form).queryByText(text, { exact: false, selector: 'label' });
 
     // Default: fixed-window-remainder + fixed-count
-    expect(durationLabel('Fensterdauer je Runde')).toBeInTheDocument();
-    expect(within(form).getByLabelText('Rundenzahl')).toBeInTheDocument();
-    expect(noDurationLabel('Belastung je Runde')).not.toBeInTheDocument();
-    expect(within(form).queryByLabelText('Pausenformel')).not.toBeInTheDocument();
+    expect(durationLabel('Window per round')).toBeInTheDocument();
+    expect(within(form).getByLabelText('Rounds')).toBeInTheDocument();
+    expect(noDurationLabel('Work per round')).not.toBeInTheDocument();
+    expect(within(form).queryByLabelText('Rest formula')).not.toBeInTheDocument();
 
-    await user.selectOptions(within(form).getByLabelText('Timing'), 'Feste Belastung/Pause je Runde');
-    expect(durationLabel('Belastung je Runde')).toBeInTheDocument();
-    expect(durationLabel('Pause je Runde')).toBeInTheDocument();
-    expect(noDurationLabel('Fensterdauer je Runde')).not.toBeInTheDocument();
+    await user.selectOptions(within(form).getByLabelText('Timing'), 'Fixed work/rest per round');
+    expect(durationLabel('Work per round')).toBeInTheDocument();
+    expect(durationLabel('Rest per round')).toBeInTheDocument();
+    expect(noDurationLabel('Window per round')).not.toBeInTheDocument();
 
-    await user.selectOptions(within(form).getByLabelText('Timing'), 'Selbstbestimmtes Tempo');
-    expect(within(form).getByLabelText('Pausenformel')).toBeInTheDocument();
-    expect(within(form).getByLabelText('Faktor (× Satzdauer)')).toBeInTheDocument();
-    expect(noDurationLabel('Pause nach jedem Satz')).not.toBeInTheDocument();
+    await user.selectOptions(within(form).getByLabelText('Timing'), 'Self-paced');
+    expect(within(form).getByLabelText('Rest formula')).toBeInTheDocument();
+    expect(within(form).getByLabelText('Factor (× set duration)')).toBeInTheDocument();
+    expect(noDurationLabel('Rest after each set')).not.toBeInTheDocument();
 
-    await user.selectOptions(within(form).getByLabelText('Pausenformel'), 'Feste Pause');
-    expect(durationLabel('Pause nach jedem Satz')).toBeInTheDocument();
-    expect(within(form).queryByLabelText('Faktor (× Satzdauer)')).not.toBeInTheDocument();
+    await user.selectOptions(within(form).getByLabelText('Rest formula'), 'Fixed rest');
+    expect(durationLabel('Rest after each set')).toBeInTheDocument();
+    expect(within(form).queryByLabelText('Factor (× set duration)')).not.toBeInTheDocument();
 
-    await user.selectOptions(within(form).getByLabelText('Stopp-Bedingung'), 'Zeitbudget (mit Kulanz)');
-    expect(durationLabel('Zeitbudget')).toBeInTheDocument();
-    expect(within(form).queryByLabelText('Rundenzahl')).not.toBeInTheDocument();
+    await user.selectOptions(within(form).getByLabelText('Stop condition'), 'Time budget (with grace)');
+    expect(durationLabel('Time budget')).toBeInTheDocument();
+    expect(within(form).queryByLabelText('Rounds')).not.toBeInTheDocument();
 
-    await user.selectOptions(within(form).getByLabelText('Stopp-Bedingung'), 'Kein Timer — manuell beenden');
-    expect(within(form).queryByLabelText('Rundenzahl')).not.toBeInTheDocument();
-    expect(noDurationLabel('Zeitbudget')).not.toBeInTheDocument();
+    await user.selectOptions(within(form).getByLabelText('Stop condition'), 'No timer — finish manually');
+    expect(within(form).queryByLabelText('Rounds')).not.toBeInTheDocument();
+    expect(noDurationLabel('Time budget')).not.toBeInTheDocument();
   });
 
   it('creates a new method with the default values and reloads the list', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
     render(<TrainingMethods />);
-    await screen.findByRole('heading', { name: 'Neue Methode' });
+    await screen.findByRole('heading', { name: 'New method' });
 
     const form = createFormContainer();
     await user.type(within(form).getByLabelText('Name'), 'Test');
@@ -102,7 +102,7 @@ describe('TrainingMethods', () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(method({ id: 2, name: 'Test' }), true, 201));
     fetchMock.mockResolvedValueOnce(jsonResponse([method({ id: 2, name: 'Test' })]));
 
-    await user.click(within(form).getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(within(form).getByRole('button', { name: 'Add' }));
 
     expect(await screen.findByText('Test')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
@@ -131,16 +131,16 @@ describe('TrainingMethods', () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
     render(<TrainingMethods />);
-    await screen.findByRole('heading', { name: 'Neue Methode' });
+    await screen.findByRole('heading', { name: 'New method' });
 
     const form = createFormContainer();
-    await user.type(within(form).getByLabelText('Name'), 'Duplikat');
+    await user.type(within(form).getByLabelText('Name'), 'Duplicate');
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Methode existiert bereits' }, false, 409));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Method already exists' }, false, 409));
 
-    await user.click(within(form).getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(within(form).getByRole('button', { name: 'Add' }));
 
-    expect(await screen.findByText('Fehler: Methode existiert bereits')).toBeInTheDocument();
+    expect(await screen.findByText('Error: Method already exists')).toBeInTheDocument();
   });
 
   it('edits a method in place', async () => {
@@ -148,21 +148,21 @@ describe('TrainingMethods', () => {
     fetchMock.mockResolvedValueOnce(jsonResponse([method()]));
     render(<TrainingMethods />);
 
-    const item = await screen.findByText('Zirkel');
+    const item = await screen.findByText('Circuit');
     const li = item.closest('li')!;
 
-    await user.click(within(li).getByRole('button', { name: 'Bearbeiten' }));
+    await user.click(within(li).getByRole('button', { name: 'Edit' }));
 
     const nameInput = within(li).getByLabelText('Name');
     await user.clear(nameInput);
-    await user.type(nameInput, 'Zirkel Pro');
+    await user.type(nameInput, 'Circuit Pro');
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(method({ name: 'Zirkel Pro' }), true, 200));
-    fetchMock.mockResolvedValueOnce(jsonResponse([method({ name: 'Zirkel Pro' })]));
+    fetchMock.mockResolvedValueOnce(jsonResponse(method({ name: 'Circuit Pro' }), true, 200));
+    fetchMock.mockResolvedValueOnce(jsonResponse([method({ name: 'Circuit Pro' })]));
 
-    await user.click(within(li).getByRole('button', { name: 'Speichern' }));
+    await user.click(within(li).getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText('Zirkel Pro')).toBeInTheDocument();
+    expect(await screen.findByText('Circuit Pro')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/training-methods/1', expect.objectContaining({ method: 'PUT' }));
   });
 
@@ -171,19 +171,19 @@ describe('TrainingMethods', () => {
     fetchMock.mockResolvedValueOnce(jsonResponse([method()]));
     render(<TrainingMethods />);
 
-    const item = await screen.findByText('Zirkel');
+    const item = await screen.findByText('Circuit');
     const li = item.closest('li')!;
-    await user.click(within(li).getByRole('button', { name: 'Löschen' }));
+    await user.click(within(li).getByRole('button', { name: 'Delete' }));
 
     fetchMock.mockResolvedValueOnce({ ok: true, status: 204, json: async () => undefined } as Response);
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
 
-    const confirmButtons = screen.getAllByRole('button', { name: 'Löschen' });
+    const confirmButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
     expect(fetchMock).toHaveBeenCalledWith('/api/training-methods/1', expect.objectContaining({ method: 'DELETE' }));
-    await screen.findByText((_, el) => el?.tagName.toLowerCase() === 'h2' && el.textContent === 'Trainingsmethoden');
-    expect(screen.queryByText('Zirkel')).not.toBeInTheDocument();
+    await screen.findByText((_, el) => el?.tagName.toLowerCase() === 'h2' && el.textContent === 'Training methods');
+    expect(screen.queryByText('Circuit')).not.toBeInTheDocument();
   });
 
   it('shows an error when deletion fails because the method is still in use', async () => {
@@ -191,16 +191,16 @@ describe('TrainingMethods', () => {
     fetchMock.mockResolvedValueOnce(jsonResponse([method()]));
     render(<TrainingMethods />);
 
-    const item = await screen.findByText('Zirkel');
+    const item = await screen.findByText('Circuit');
     const li = item.closest('li')!;
-    await user.click(within(li).getByRole('button', { name: 'Löschen' }));
+    await user.click(within(li).getByRole('button', { name: 'Delete' }));
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Methode wird noch verwendet' }, false, 409));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Method is still in use' }, false, 409));
 
-    const confirmButtons = screen.getAllByRole('button', { name: 'Löschen' });
+    const confirmButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
-    expect(await screen.findByText('Fehler: Methode wird noch verwendet')).toBeInTheDocument();
-    expect(screen.getByText('Zirkel')).toBeInTheDocument();
+    expect(await screen.findByText('Error: Method is still in use')).toBeInTheDocument();
+    expect(screen.getByText('Circuit')).toBeInTheDocument();
   });
 });

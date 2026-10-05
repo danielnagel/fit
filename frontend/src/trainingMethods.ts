@@ -19,24 +19,24 @@ export type TrainingMethod = {
 };
 
 export const SCOPE_LABELS: Record<Scope, string> = {
-  single: 'Einzelübung',
-  pair: 'Paar (Superset)',
-  all: 'Alle Übungen zusammen',
+  single: 'Single exercise',
+  pair: 'Pair (superset)',
+  all: 'All exercises together',
 };
 
 export const TIMING_FAMILY_LABELS: Record<TimingFamily, string> = {
-  'fixed-window-remainder': 'Festes Zeitfenster je Runde',
-  'fixed-work-rest': 'Feste Belastung/Pause je Runde',
-  'self-paced': 'Selbstbestimmtes Tempo',
+  'fixed-window-remainder': 'Fixed time window per round',
+  'fixed-work-rest': 'Fixed work/rest per round',
+  'self-paced': 'Self-paced',
 };
 
 export const REST_FORMULA_LABELS: Record<RestFormula, string> = {
-  proportional: 'Proportional zur Satzdauer',
-  fixed: 'Feste Pause',
+  proportional: 'Proportional to set duration',
+  fixed: 'Fixed rest',
 };
 
 export const STOP_CONDITION_LABELS: Record<StopCondition, string> = {
-  'fixed-count': 'Feste Rundenzahl',
-  'time-budget': 'Zeitbudget (mit Kulanz)',
-  'all-exercises-done': 'Kein Timer — manuell beenden',
+  'fixed-count': 'Fixed number of rounds',
+  'time-budget': 'Time budget (with grace)',
+  'all-exercises-done': 'No timer — finish manually',
 };

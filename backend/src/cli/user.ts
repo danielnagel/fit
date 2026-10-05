@@ -8,8 +8,8 @@ const KEY_EOF = '\u0004'; // Ctrl-D
 const KEY_INTERRUPT = '\u0003'; // Ctrl-C
 const KEY_BACKSPACE = new Set(['\u007f', '\b']);
 
-// Liest eine Zeile ohne Echo, damit ein interaktiv eingegebenes Passwort (docker compose exec ist
-// standardmaessig ein TTY) weder in der Shell-History noch in `ps` landet wie ein Argument.
+// Reads a line without echo so that an interactively entered password (docker compose exec is a
+// TTY by default) ends up neither in the shell history nor in `ps` the way an argument would.
 function promptHidden(question: string): Promise<string> {
   return new Promise((resolve) => {
     process.stdout.write(question);
@@ -60,7 +60,7 @@ const io: CliIo = {
   promptHidden,
 };
 
-const USAGE = `Befehle:
+const USAGE = `Commands:
   create [<username> <password>] [--no-seed]
   list
   set-password <username> [<password>]
@@ -104,7 +104,7 @@ main()
     process.exitCode = code;
   })
   .catch((err: Error) => {
-    console.error(`Fehler: ${err.message}`);
+    console.error(`Error: ${err.message}`);
     process.exitCode = 1;
   })
   .finally(() => pool.end());

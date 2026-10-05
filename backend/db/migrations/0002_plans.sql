@@ -1,4 +1,4 @@
--- Foto-Import-Audit-Trail; wird erst ab M7 befuellt, Tabelle existiert schon fuer den FK auf plans.
+-- Photo import audit trail; only filled from M7 on, the table already exists for the FK on plans.
 CREATE TABLE plan_import_images (
   id SERIAL PRIMARY KEY,
   image_path TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE plans (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Trainingstag-Template im woechentlichen Plan-Zyklus (z. B. "Push Day"), day_order fuer Reihenfolge/Anzeige.
+-- Training day template in the weekly plan cycle (e.g. "Push Day"), day_order for ordering/display.
 CREATE TABLE plan_days (
   id SERIAL PRIMARY KEY,
   plan_id INTEGER NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
@@ -33,7 +33,7 @@ CREATE TABLE plan_day_exercises (
   exercise_order INTEGER NOT NULL
 );
 
--- Ein Datensatz pro geplantem Satz; entweder Ziel-Reps oder Ziel-Dauer (z. B. Plank), nie beides zwingend.
+-- One row per planned set; either target reps or target duration (e.g. plank), never both required.
 CREATE TABLE planned_sets (
   id SERIAL PRIMARY KEY,
   plan_day_exercise_id INTEGER NOT NULL REFERENCES plan_day_exercises(id) ON DELETE CASCADE,

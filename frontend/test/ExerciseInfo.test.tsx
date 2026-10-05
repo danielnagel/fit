@@ -11,13 +11,13 @@ describe('ExerciseInfo', () => {
 
   it('toggles the description tooltip on click', async () => {
     const user = userEvent.setup();
-    render(<ExerciseInfo description="3 Sek. Haltezeit" />);
+    render(<ExerciseInfo description="3 s hold" />);
 
-    const button = screen.getByRole('button', { name: 'Übungsbeschreibung anzeigen' });
+    const button = screen.getByRole('button', { name: 'Show exercise description' });
     expect(button).toHaveAttribute('aria-expanded', 'false');
 
     await user.click(button);
     expect(button).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('3 Sek. Haltezeit')).toBeInTheDocument();
+    expect(screen.getByText('3 s hold')).toBeInTheDocument();
   });
 });

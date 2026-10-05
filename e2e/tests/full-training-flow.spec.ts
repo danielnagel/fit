@@ -1,59 +1,59 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Kompletter Trainingsablauf', () => {
-  test('Plan anlegen, Woche starten, Training durchführen und in der Historie sehen', async ({ page }) => {
+test.describe('Complete training flow', () => {
+  test('create a plan, start a week, run a training and see it in the history', async ({ page }) => {
     await page.goto('/exercises');
-    await page.getByPlaceholder('Name').fill('E2E Liegestütz');
-    await page.getByRole('button', { name: 'Hinzufügen' }).click();
-    await expect(page.getByText('E2E Liegestütz', { exact: true })).toBeVisible();
+    await page.getByPlaceholder('Name').fill('E2E Push-up');
+    await page.getByRole('button', { name: 'Add' }).click();
+    await expect(page.getByText('E2E Push-up', { exact: true })).toBeVisible();
 
-    // Plan mit der Katalog-Methode "Intervallsatz" (fixed-window-remainder, 3 Runden, Seed aus Migration 0011).
+    // Plan with the catalog method "Interval set" (fixed-window-remainder, 3 rounds, default seed of the user).
     await page.goto('/plans');
-    await page.getByRole('button', { name: 'Neuer Plan' }).click();
+    await page.getByRole('button', { name: 'New plan' }).click();
     await page.getByLabel('Name').fill('E2E Flow-Plan');
-    await page.getByPlaceholder('Trainingstag-Name').fill('Tag A');
-    await page.locator('select').nth(0).selectOption({ label: 'Intervallsatz' });
-    await page.locator('select').nth(1).selectOption({ label: 'E2E Liegestütz' });
-    await page.getByRole('button', { name: 'Speichern' }).click();
+    await page.getByPlaceholder('Training day name').fill('Day A');
+    await page.locator('select').nth(0).selectOption({ label: 'Interval set' });
+    await page.locator('select').nth(1).selectOption({ label: 'E2E Push-up' });
+    await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.locator('li').filter({ hasText: 'E2E Flow-Plan' })).toBeVisible();
 
-    // Woche starten.
+    // Start the week.
     await page.goto('/training');
     await page.getByLabel('Plan').selectOption({ label: 'E2E Flow-Plan' });
-    await page.getByRole('button', { name: 'Woche starten' }).click();
+    await page.getByRole('button', { name: 'Start week' }).click();
     await expect(page.getByText('E2E Flow-Plan')).toBeVisible();
 
-    // Trainingstag waehlen und Training starten.
-    await page.getByLabel('Trainingstag').selectOption({ label: 'Tag A (Intervallsatz)' });
-    await page.getByRole('button', { name: 'Training starten' }).click();
+    // Pick the training day and start the training.
+    await page.getByLabel('Training day').selectOption({ label: 'Day A (Interval set)' });
+    await page.getByRole('button', { name: 'Start training' }).click();
 
-    // 3 Runden durchlaufen (fixed-count, rounds=3) -- Wiederholungen eintragen und "Weiter"
-    // klicken statt auf den echten 180s-Fenster-Timer zu warten.
+    // Go through 3 rounds (fixed-count, rounds=3) -- enter reps and click "Next"
+    // instead of waiting for the real 180s window timer.
     for (let round = 1; round <= 3; round++) {
-      await expect(page.getByText(`Satz ${round}/3`)).toBeVisible();
-      await page.getByLabel('Wiederholungen').fill('10');
-      await page.getByRole('button', { name: 'Weiter' }).click();
+      await expect(page.getByText(`set ${round}/3`)).toBeVisible();
+      await page.getByLabel('Reps').fill('10');
+      await page.getByRole('button', { name: 'Next' }).click();
     }
 
-    // Nach der letzten Runde schliesst die Session automatisch ab und man landet zurueck bei
-    // SessionStart; die Woche ist weiterhin aktiv (Fenster verstreicht, sobald sie sichtbar ist).
-    await expect(page.getByRole('button', { name: 'Woche beenden' })).toBeVisible();
+    // After the last round the session completes automatically and you're back at
+    // SessionStart; the week stays active (the window elapses as soon as it is visible).
+    await expect(page.getByRole('button', { name: 'End week' })).toBeVisible();
 
     await page.goto('/history');
-    await page.getByRole('button', { name: 'Woche anzeigen' }).click();
-    // Der Wochen-<li> umschliesst den Session-<li>, beide enthalten "Tag A" als Text --
-    // .last() greift den inneren (spezifischeren) Session-Eintrag.
-    const sessionRow = page.locator('li').filter({ hasText: 'Tag A' }).last();
-    await expect(sessionRow).toContainText('Abgeschlossen');
+    await page.getByRole('button', { name: 'Show week' }).click();
+    // The week <li> wraps the session <li>, both contain "Day A" as text --
+    // .last() picks the inner (more specific) session entry.
+    const sessionRow = page.locator('li').filter({ hasText: 'Day A' }).last();
+    await expect(sessionRow).toContainText('Completed');
 
     await sessionRow.getByRole('button', { name: 'Details' }).click();
-    await expect(sessionRow.getByText('E2E Liegestütz').first()).toBeVisible();
+    await expect(sessionRow.getByText('E2E Push-up').first()).toBeVisible();
     await expect(sessionRow.getByRole('cell', { name: '10' }).first()).toBeVisible();
 
-    // Aufraeumen: Woche wieder beenden, damit kein globaler Zustand fuer andere Specs haengen bleibt.
+    // Clean up: end the week again so no global state is left behind for other specs.
     await page.goto('/training');
-    await page.getByRole('button', { name: 'Woche beenden' }).click();
-    await page.getByRole('button', { name: 'Beenden', exact: true }).click();
+    await page.getByRole('button', { name: 'End week' }).click();
+    await page.getByRole('button', { name: 'End', exact: true }).click();
     await expect(page.getByLabel('Plan')).toBeVisible();
   });
 });

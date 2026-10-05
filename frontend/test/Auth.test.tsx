@@ -39,9 +39,9 @@ afterEach(() => {
 });
 
 async function submitLogin(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(await screen.findByLabelText('Benutzername'), 'anna');
-  await user.type(screen.getByLabelText('Passwort'), 'geheim123');
-  await user.click(screen.getByRole('button', { name: 'Anmelden' }));
+  await user.type(await screen.findByLabelText('Username'), 'anna');
+  await user.type(screen.getByLabelText('Password'), 'geheim123');
+  await user.click(screen.getByRole('button', { name: 'Log in' }));
 }
 
 describe('authentication flow', () => {
@@ -49,9 +49,9 @@ describe('authentication flow', () => {
     window.history.pushState({}, '', '/plans');
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: 'Anmelden' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/login');
-    expect(screen.queryByRole('link', { name: 'Pläne' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Plans' })).not.toBeInTheDocument();
   });
 
   it('returns to the originally requested page after logging in', async () => {
@@ -61,7 +61,7 @@ describe('authentication flow', () => {
 
     await submitLogin(user);
 
-    expect(await screen.findByRole('heading', { name: 'Trainingshistorie' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Training history' })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/history');
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({
       method: 'POST',
@@ -76,13 +76,13 @@ describe('authentication flow', () => {
 
     await submitLogin(user);
 
-    await screen.findByRole('heading', { name: 'Trainingspläne' });
+    await screen.findByRole('heading', { name: 'Training plans' });
     expect(`${window.location.pathname}${window.location.search}`).toBe('/plans?x=1');
   });
 
   it.each([
-    [401, 'Benutzername oder Passwort falsch'],
-    [429, 'Zu viele Versuche – bitte in ein paar Minuten erneut probieren'],
+    [401, 'Wrong username or password'],
+    [429, 'Too many attempts – please try again in a few minutes'],
   ])('shows an error for status %i', async (status, message) => {
     loginStatus = status;
     const user = userEvent.setup();
@@ -92,7 +92,7 @@ describe('authentication flow', () => {
     await submitLogin(user);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(message);
-    expect(screen.getByLabelText('Passwort')).toHaveValue('');
+    expect(screen.getByLabelText('Password')).toHaveValue('');
   });
 
   it('shows the username and logs out', async () => {
@@ -102,9 +102,9 @@ describe('authentication flow', () => {
     render(<App />);
 
     expect(await screen.findByText('anna')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Abmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Log out' }));
 
-    expect(await screen.findByRole('heading', { name: 'Anmelden' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', { method: 'POST' });
   });
 
@@ -113,15 +113,15 @@ describe('authentication flow', () => {
     const user = userEvent.setup();
     window.history.pushState({}, '', '/exercises');
     render(<App />);
-    await screen.findByRole('heading', { name: 'Übungen' });
+    await screen.findByRole('heading', { name: 'Exercises' });
 
     loggedIn = false;
-    await user.type(screen.getByPlaceholderText('Name'), 'Kniebeuge');
+    await user.type(screen.getByPlaceholderText('Name'), 'Squat');
     await user.keyboard('{Enter}');
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Anmelden' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Log in' })).toBeInTheDocument());
     await submitLogin(user);
-    expect(await screen.findByRole('heading', { name: 'Übungen' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Exercises' })).toBeInTheDocument();
   });
 });
 
@@ -130,8 +130,8 @@ describe('demo mode', () => {
     window.history.pushState({}, '', '/login');
     render(<App />);
 
-    await screen.findByRole('heading', { name: 'Anmelden' });
-    expect(screen.queryByRole('button', { name: 'Demo ausprobieren' })).not.toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'Log in' });
+    expect(screen.queryByRole('button', { name: 'Try the demo' })).not.toBeInTheDocument();
   });
 
   it('starts a demo session from the login page', async () => {
@@ -148,10 +148,10 @@ describe('demo mode', () => {
     window.history.pushState({}, '', '/plans');
     render(<App />);
 
-    expect(await screen.findByText(/nach 60 Minuten gelöscht/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Demo ausprobieren' }));
+    expect(await screen.findByText(/after 60 minutes/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Try the demo' }));
 
-    expect(await screen.findByRole('heading', { name: 'Trainingspläne' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Training plans' })).toBeInTheDocument();
     expect(screen.getByText('demo-abc123')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/demo', { method: 'POST' });
   });

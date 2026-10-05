@@ -1,13 +1,13 @@
--- Zaehlung/Fortschritt eines Blocks (siehe blockRunnerUtils.computeUnits) gruppierte bislang
--- ausschliesslich nach exercise_id. Taucht dieselbe Uebung mehrfach in verschiedenen Paaren
--- desselben Blocks auf (z.B. "Tuerziehen" in mehreren Supersatz-Paaren), wurden geloggte Saetze
--- eines Paares faelschlich als Fortschritt eines anderen Paares gezaehlt -- ein Paar konnte so
--- als "fertig" gelten, bevor es ueberhaupt begonnen wurde.
+-- Counting/progress of a block (see blockRunnerUtils.computeUnits) used to group
+-- by exercise_id only. If the same exercise appears several times in different pairs
+-- of the same block (e.g. "door pull" in several superset pairs), logged sets
+-- of one pair were wrongly counted as progress of another pair -- a pair could thus
+-- count as "done" before it had even started.
 --
--- plan_block_exercise_id identifiziert den konkreten Eintrag (das "Slot") innerhalb des
--- eingefrorenen day_snapshot, unabhaengig von der (moeglicherweise wiederholten) exercise_id.
--- Bewusst ohne Foreign Key auf plan_block_exercises: der day_snapshot ist zum Zeitpunkt des
--- Session-Starts eingefroren, spaetere Aenderungen/Loeschungen am Plan duerfen historische
--- Saetze nicht kaskadierend veraendern. Bestehende Zeilen bleiben NULL und fallen im Frontend
--- auf das alte (exercise_id-basierte) Verhalten zurueck.
+-- plan_block_exercise_id identifies the concrete entry (the "slot") within the
+-- frozen day_snapshot, independent of the (possibly repeated) exercise_id.
+-- Deliberately without a foreign key to plan_block_exercises: the day_snapshot is frozen at
+-- session start, later changes/deletions to the plan must not cascade into historical
+-- sets. Existing rows stay NULL and fall back to the old (exercise_id-based) behaviour
+-- in the frontend.
 ALTER TABLE logged_sets ADD COLUMN plan_block_exercise_id INTEGER;

@@ -40,7 +40,7 @@ export default function Exercises() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
 
@@ -67,7 +67,7 @@ export default function Exercises() {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     setEditingId(null);
@@ -85,7 +85,7 @@ export default function Exercises() {
     const res = await apiFetch(`/api/exercises/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     load();
@@ -93,8 +93,8 @@ export default function Exercises() {
 
   return (
     <section className="card">
-      <h2 className="mb-4">Übungen</h2>
-      {error && <p className="mb-3 text-sm text-danger">Fehler: {error}</p>}
+      <h2 className="mb-4">Exercises</h2>
+      {error && <p className="mb-3 text-sm text-danger">Error: {error}</p>}
       <ul className="mb-5 flex flex-col gap-2">
         {exercises.map((ex) =>
           editingId === ex.id ? (
@@ -110,7 +110,7 @@ export default function Exercises() {
                 className="field w-full max-w-md"
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Beschreibung (optional)"
+                placeholder="Description (optional)"
               />
               <label className="flex items-center gap-1.5">
                 <input
@@ -118,14 +118,14 @@ export default function Exercises() {
                   checked={editIsUnilateral}
                   onChange={(e) => setEditIsUnilateral(e.target.checked)}
                 />
-                kann einseitig ausgeführt werden
+                can be done unilaterally
               </label>
               <div className="flex gap-2">
                 <button type="button" className="btn-primary" onClick={() => saveEdit(ex.id)}>
-                  Speichern
+                  Save
                 </button>
                 <button type="button" className="btn" onClick={cancelEdit}>
-                  Abbrechen
+                  Cancel
                 </button>
               </div>
             </li>
@@ -137,13 +137,13 @@ export default function Exercises() {
                   – {ex.description}
                 </span>
               )}
-              {ex.is_unilateral && <span className="hint">· einseitig</span>}
+              {ex.is_unilateral && <span className="hint">· unilateral</span>}
               <div className="ml-auto flex gap-2">
                 <button type="button" className="btn" onClick={() => startEdit(ex)}>
-                  Bearbeiten
+                  Edit
                 </button>
                 <button type="button" className="btn-danger" onClick={() => requestDelete(ex.id)}>
-                  Löschen
+                  Delete
                 </button>
               </div>
             </li>
@@ -156,17 +156,17 @@ export default function Exercises() {
           className="field w-full max-w-md"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Beschreibung (optional)"
+          placeholder="Description (optional)"
         />
         <label className="flex items-center gap-1.5">
           <input type="checkbox" checked={isUnilateral} onChange={(e) => setIsUnilateral(e.target.checked)} />
-          kann einseitig ausgeführt werden
+          can be done unilaterally
         </label>
         <button type="submit" className="btn-primary">
-          Hinzufügen
+          Add
         </button>
       </form>
-      <ConfirmDialog ref={deleteDialogRef} message="Übung wirklich löschen?" onConfirm={handleDelete} />
+      <ConfirmDialog ref={deleteDialogRef} message="Really delete this exercise?" onConfirm={handleDelete} />
     </section>
   );
 }

@@ -1,5 +1,5 @@
--- Intervallsatz: statt die Laufzeit zu pausieren, wird festgehalten, nach wie vielen Sekunden
--- innerhalb des Zeitfensters der Satz (die Belastung) abgeschlossen wurde. Die restliche Zeit bis
--- zum Rundenende gilt als Pause. NULL, wenn kein Abschluss markiert wurde (z.B. bei anderen
--- Trainingsmethoden oder wenn die Runde ohne Markierung endet).
+-- Interval set: instead of pausing the clock, we record after how many seconds
+-- within the time window the set (the work) was completed. The remaining time until
+-- the end of the round counts as rest. NULL if no completion was marked (e.g. for other
+-- training methods or when the round ends without a mark).
 ALTER TABLE logged_sets ADD COLUMN completed_seconds INTEGER;

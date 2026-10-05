@@ -40,16 +40,16 @@ describe('foreign ids answer 404 and leave the data untouched', () => {
   it('exercises', async () => {
     const path = `/api/exercises/${data.exercise.id}`;
 
-    expect((await bob.put(path).send({ name: 'gekapert' })).status).toBe(404);
+    expect((await bob.put(path).send({ name: 'hijacked' })).status).toBe(404);
     expect((await bob.delete(path)).status).toBe(404);
-    expect((await alice.get('/api/exercises')).body[0].name).toBe('Kniebeuge');
+    expect((await alice.get('/api/exercises')).body[0].name).toBe('Squat');
   });
 
   it('training methods', async () => {
     const path = `/api/training-methods/${data.method.id}`;
 
     expect((await bob.get(path)).status).toBe(404);
-    expect((await bob.put(path).send({ ...data.method, name: 'gekapert' })).status).toBe(404);
+    expect((await bob.put(path).send({ ...data.method, name: 'hijacked' })).status).toBe(404);
     expect((await bob.delete(path)).status).toBe(404);
     expect((await alice.get(path)).body.name).toBe(data.method.name);
   });
@@ -58,7 +58,7 @@ describe('foreign ids answer 404 and leave the data untouched', () => {
     const path = `/api/plans/${data.plan.id}`;
 
     expect((await bob.get(path)).status).toBe(404);
-    expect((await bob.put(path).send({ name: 'gekapert', days: [] })).status).toBe(404);
+    expect((await bob.put(path).send({ name: 'hijacked', days: [] })).status).toBe(404);
     expect((await bob.delete(path)).status).toBe(404);
     expect((await alice.get(path)).body.name).toBe(data.plan.name);
   });
@@ -103,11 +103,11 @@ describe('references to foreign data are rejected', () => {
 
     const res = await bob.post('/api/plans').send({
       name: 'Plan',
-      days: [{ name: 'Tag', blocks: [{ training_method_id: ownMethod.id, exercises: [{ exercise_id: data.exercise.id }] }] }],
+      days: [{ name: 'Day', blocks: [{ training_method_id: ownMethod.id, exercises: [{ exercise_id: data.exercise.id }] }] }],
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('unbekannte exercise_id');
+    expect(res.body.message).toBe('unknown exercise_id');
   });
 
   it('a plan cannot use a foreign training method', async () => {
@@ -115,11 +115,11 @@ describe('references to foreign data are rejected', () => {
 
     const res = await bob.post('/api/plans').send({
       name: 'Plan',
-      days: [{ name: 'Tag', blocks: [{ training_method_id: data.method.id, exercises: [{ exercise_id: ownExercise.id }] }] }],
+      days: [{ name: 'Day', blocks: [{ training_method_id: data.method.id, exercises: [{ exercise_id: ownExercise.id }] }] }],
     });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toBe('unbekannte training_method_id');
+    expect(res.body.message).toBe('unknown training_method_id');
   });
 
   it('an own session cannot log sets or finish exercises with a foreign exercise', async () => {
@@ -139,7 +139,7 @@ describe('references to foreign data are rejected', () => {
 
 describe('per-user uniqueness', () => {
   it('allows the same exercise name for different users', async () => {
-    const res = await bob.post('/api/exercises').send({ name: 'Kniebeuge' });
+    const res = await bob.post('/api/exercises').send({ name: 'Squat' });
 
     expect(res.status).toBe(201);
   });

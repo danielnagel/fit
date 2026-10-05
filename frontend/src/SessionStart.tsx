@@ -61,7 +61,7 @@ export default function SessionStart({ onStarted }: Props) {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     loadActiveWeek();
@@ -73,7 +73,7 @@ export default function SessionStart({ onStarted }: Props) {
     const res = await apiFetch(`/api/plan-weeks/${activeWeek.id}`, { method: 'PATCH' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     setDayId('');
@@ -89,27 +89,27 @@ export default function SessionStart({ onStarted }: Props) {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     const session = await res.json();
     onStarted(session.id);
   };
 
-  if (activeWeek === undefined) return <p className="hint">Lade...</p>;
+  if (activeWeek === undefined) return <p className="hint">Loading...</p>;
 
   const resumable = activeWeek?.sessions.find((s) => s.status === 'in_progress' && String(s.plan_day_id) === dayId);
 
   return (
     <div className="flex flex-col items-start gap-3">
-      {error && <p className="text-sm text-danger">Fehler: {error}</p>}
+      {error && <p className="text-sm text-danger">Error: {error}</p>}
 
       {!activeWeek ? (
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2">
             Plan{' '}
             <select className="field" value={planId} onChange={(e) => setPlanId(e.target.value)}>
-              <option value="">Plan wählen...</option>
+              <option value="">Choose plan...</option>
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -118,23 +118,23 @@ export default function SessionStart({ onStarted }: Props) {
             </select>
           </label>
           <button type="button" className="btn-primary" disabled={!planId} onClick={handleStartWeek}>
-            Woche starten
+            Start week
           </button>
         </div>
       ) : (
         <>
           <p className="flex flex-wrap items-center gap-2">
-            Aktuelle Woche: <strong className="text-fg">{activeWeek.plan_name}</strong> — Woche {activeWeek.week_number}
+            Current week: <strong className="text-fg">{activeWeek.plan_name}</strong> — week {activeWeek.week_number}
             <button type="button" className="btn-danger" onClick={() => endDialogRef.current?.open()}>
-              Woche beenden
+              End week
             </button>
           </p>
 
           {days.length > 0 && (
             <label className="flex items-center gap-2">
-              Trainingstag{' '}
+              Training day{' '}
               <select className="field" value={dayId} onChange={(e) => setDayId(e.target.value)}>
-                <option value="">Trainingstag wählen...</option>
+                <option value="">Choose training day...</option>
                 {days.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name} ({d.blocks.map((b) => b.training_method.name).join(', ')})
@@ -147,17 +147,17 @@ export default function SessionStart({ onStarted }: Props) {
           {dayId &&
             (resumable ? (
               <button type="button" className="btn-primary" onClick={() => onStarted(resumable.id)}>
-                Fortsetzen (in Bearbeitung)
+                Resume (in progress)
               </button>
             ) : (
               <button type="button" className="btn-primary" onClick={handleStartTraining}>
-                Training starten
+                Start training
               </button>
             ))}
         </>
       )}
 
-      <ConfirmDialog ref={endDialogRef} message="Woche wirklich beenden?" confirmLabel="Beenden" onConfirm={handleEndWeek} />
+      <ConfirmDialog ref={endDialogRef} message="Really end the week?" confirmLabel="End" onConfirm={handleEndWeek} />
     </div>
   );
 }

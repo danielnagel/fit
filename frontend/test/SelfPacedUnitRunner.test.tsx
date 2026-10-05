@@ -31,10 +31,10 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Übung 1')).toBeInTheDocument();
-    expect(screen.getByText(/Stufe 1/)).toBeInTheDocument();
-    expect(screen.getByText('Arbeitszeit: 0:00')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Satz fertig' })).toBeDisabled();
+    expect(screen.getByText('Exercise 1')).toBeInTheDocument();
+    expect(screen.getByText(/step 1/)).toBeInTheDocument();
+    expect(screen.getByText('Work time: 0:00')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Set done' })).toBeDisabled();
     expect(setTimerAnchor).toHaveBeenCalledWith('primary', 'b0-u0-work-1-0', 0);
   });
 
@@ -53,7 +53,7 @@ describe('SelfPacedUnitRunner', () => {
 
     await act(() => vi.advanceTimersByTimeAsync(5000));
 
-    expect(screen.getByText('Arbeitszeit: 0:05')).toBeInTheDocument();
+    expect(screen.getByText('Work time: 0:05')).toBeInTheDocument();
   });
 
   it('logs the set and enters a fixed rest phase on finishing a step', async () => {
@@ -70,13 +70,13 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Wiederholungen'), { target: { value: '12' } });
+    fireEvent.change(screen.getByLabelText('Reps'), { target: { value: '12' } });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Satz fertig' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Set done' }));
     });
 
     expect(logSet).toHaveBeenCalledWith(1, undefined, 0, 12);
-    expect(screen.getByRole('button', { name: 'Pause abbrechen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Skip rest' })).toBeInTheDocument();
     expect(screen.getByText('0:15')).toBeInTheDocument();
   });
 
@@ -94,13 +94,13 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText('Wiederholungen'), { target: { value: '12' } });
+    fireEvent.change(screen.getByLabelText('Reps'), { target: { value: '12' } });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Satz fertig' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Set done' }));
     });
     await act(() => vi.advanceTimersByTimeAsync(15_000));
 
-    expect(screen.getByText('Arbeitszeit: 0:00')).toBeInTheDocument();
+    expect(screen.getByText('Work time: 0:00')).toBeInTheDocument();
   });
 
   it('does not show a side selector for exercises without an active unilateral flag', () => {
@@ -116,7 +116,7 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    expect(screen.queryByLabelText('Seite')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Side')).not.toBeInTheDocument();
   });
 
   it('shows a side selector and logs the chosen side on finishing a step', async () => {
@@ -133,11 +133,11 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Seite')).toHaveValue('left');
-    fireEvent.change(screen.getByLabelText('Wiederholungen'), { target: { value: '12' } });
-    fireEvent.change(screen.getByLabelText('Seite'), { target: { value: 'right' } });
+    expect(screen.getByLabelText('Side')).toHaveValue('left');
+    fireEvent.change(screen.getByLabelText('Reps'), { target: { value: '12' } });
+    fireEvent.change(screen.getByLabelText('Side'), { target: { value: 'right' } });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Satz fertig' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Set done' }));
     });
 
     expect(logSet).toHaveBeenCalledWith(1, undefined, 0, 12, undefined, 'right');
@@ -157,10 +157,10 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Übung beenden' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish exercise' })).toBeInTheDocument();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Übung beenden' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Finish exercise' }));
     });
 
     expect(finishExercise).toHaveBeenCalledWith(1, undefined);
@@ -183,8 +183,8 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Letzter Satz: 9 Wiederholungen')).toBeInTheDocument();
-    expect(screen.getByText(/Bisherige Bestleistung: Stufe 5, meiste Wiederholungen 11/)).toBeInTheDocument();
+    expect(screen.getByText('Last set: 9 reps')).toBeInTheDocument();
+    expect(screen.getByText(/Personal best so far: step 5, most reps 11/)).toBeInTheDocument();
   });
 
   it('previews the next stage after the pause', () => {
@@ -200,7 +200,7 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Nächste Stufe nach der Pause: Stufe 2')).toBeInTheDocument();
+    expect(screen.getByText('Next step after the rest: step 2')).toBeInTheDocument();
   });
 
   it('shows the remaining time budget for time-budget methods', async () => {
@@ -216,10 +216,10 @@ describe('SelfPacedUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText(/Zeitbudget verbleibend: 7:30/)).toBeInTheDocument();
+    expect(screen.getByText(/Time budget left: 7:30/)).toBeInTheDocument();
 
     await act(() => vi.advanceTimersByTimeAsync(10_000));
 
-    expect(screen.getByText(/Zeitbudget verbleibend: 7:20/)).toBeInTheDocument();
+    expect(screen.getByText(/Time budget left: 7:20/)).toBeInTheDocument();
   });
 });

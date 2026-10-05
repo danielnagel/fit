@@ -9,22 +9,22 @@ test.describe('Navigation', () => {
 
   test('every nav link leads to the right page', async ({ page }) => {
     await page.goto('/training');
-    // Nav.tsx rendert die 5 Links zweimal (Desktop-Header + Mobile-Bottom-Nav) --
-    // auf den Header scopen, damit die Locators eindeutig sind.
+    // Nav.tsx renders the 5 links twice (desktop header + mobile bottom nav) --
+    // scope to the header so the locators are unique.
     const nav = page.locator('header');
 
-    await nav.getByRole('link', { name: 'Pläne' }).click();
-    await expect(page.getByRole('heading', { name: 'Trainingspläne' })).toBeVisible();
+    await nav.getByRole('link', { name: 'Plans' }).click();
+    await expect(page.getByRole('heading', { name: 'Training plans' })).toBeVisible();
 
-    await nav.getByRole('link', { name: 'Methoden' }).click();
-    await expect(page.getByRole('heading', { name: 'Trainingsmethoden' })).toBeVisible();
+    await nav.getByRole('link', { name: 'Methods' }).click();
+    await expect(page.getByRole('heading', { name: 'Training methods' })).toBeVisible();
 
-    await nav.getByRole('link', { name: 'Übungen' }).click();
-    await expect(page.getByRole('heading', { name: 'Übungen' })).toBeVisible();
+    await nav.getByRole('link', { name: 'Exercises' }).click();
+    await expect(page.getByRole('heading', { name: 'Exercises' })).toBeVisible();
 
-    await nav.getByRole('link', { name: 'Historie' }).click();
-    await expect(page.getByRole('heading', { name: 'Fortschritt' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Trainingshistorie' })).toBeVisible();
+    await nav.getByRole('link', { name: 'History' }).click();
+    await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Training history' })).toBeVisible();
 
     await nav.getByRole('link', { name: 'Training' }).click();
     await expect(page.getByRole('heading', { name: 'Training' })).toBeVisible();

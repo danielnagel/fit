@@ -14,11 +14,11 @@ const loginRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'rate_limited' },
-  // Vitest setzt NODE_ENV=test; die Tests loggen sich weit oefter als 10-mal ein.
+  // Vitest sets NODE_ENV=test; the tests log in far more often than 10 times.
   skip: () => process.env.NODE_ENV === 'test',
 });
 
-// Eigener Zaehler: legt pro Aufruf einen Benutzer samt Beispieldaten an.
+// Separate counter: every call creates a user including example data.
 const demoRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 20,
@@ -28,7 +28,7 @@ const demoRateLimiter = rateLimit({
   skip: () => process.env.NODE_ENV === 'test',
 });
 
-// Oeffentlich: die Login-Seite blendet damit den Demo-Einstieg ein.
+// Public: the login page uses it to show the demo entry.
 authRouter.get('/config', (_req, res) => {
   res.json({ demo: isDemoMode(), demo_ttl_minutes: DEMO_TTL_MS / 60000 });
 });

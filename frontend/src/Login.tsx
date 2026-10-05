@@ -54,18 +54,18 @@ export default function Login() {
         <section className="card mb-4 flex flex-col gap-3">
           <h2>Demo</h2>
           <p className="hint">
-            Probier Fit mit Beispieldaten aus: ein Trainingsplan, ein paar vergangene Trainings und eine laufende Woche.
-            Dein Demo-Zugang und alle Änderungen werden nach {demo.ttlMinutes} Minuten gelöscht.
+            Try Fit with example data: a training plan, a few past trainings and a running week.
+            Your demo account and all changes are deleted after {demo.ttlMinutes} minutes.
           </p>
           <button type="button" className="btn-primary" onClick={handleDemo} disabled={submitting}>
-            Demo ausprobieren
+            Try the demo
           </button>
         </section>
       )}
       <form className="card flex flex-col gap-3" onSubmit={handleSubmit}>
-        <h2 className="mb-1">Anmelden</h2>
+        <h2 className="mb-1">Log in</h2>
         <label className="flex flex-col gap-1">
-          Benutzername
+          Username
           <input
             className="field"
             value={username}
@@ -76,7 +76,7 @@ export default function Login() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          Passwort
+          Password
           <input
             className="field"
             type="password"
@@ -87,7 +87,7 @@ export default function Login() {
           />
         </label>
         <button type="submit" className="btn-primary mt-2" disabled={submitting}>
-          {submitting ? 'Anmelden …' : 'Anmelden'}
+          {submitting ? 'Logging in …' : 'Log in'}
         </button>
       </form>
     </main>

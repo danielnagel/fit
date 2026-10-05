@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest';
 
 afterEach(() => cleanup());
 
-// jsdom implementiert <dialog>.showModal()/.close() nicht (siehe ConfirmDialog.tsx).
+// jsdom doesn't implement <dialog>.showModal()/.close() (see ConfirmDialog.tsx).
 if (!HTMLDialogElement.prototype.showModal) {
   HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute('open', '');

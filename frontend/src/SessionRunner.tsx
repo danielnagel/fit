@@ -96,8 +96,8 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, activeBlockIndex]);
 
-  if (error) return <p className="text-sm text-danger">Fehler: {error}</p>;
-  if (!session) return <p className="hint">Lade...</p>;
+  if (error) return <p className="text-sm text-danger">Error: {error}</p>;
+  if (!session) return <p className="hint">Loading...</p>;
 
   const activeBlock = activeBlockIndex === -1 ? null : blocks[activeBlockIndex];
   const unitPosition = activeBlock
@@ -112,7 +112,7 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
           <span className="hint">
             {' '}
             — Block {activeBlockIndex + 1}/{blocks.length} ({activeBlock.training_method.name})
-            {unitPosition && ` — Übung ${unitPosition.index + 1}/${unitPosition.total}`}
+            {unitPosition && ` — exercise ${unitPosition.index + 1}/${unitPosition.total}`}
           </span>
         )}
       </div>
@@ -126,15 +126,15 @@ export default function SessionRunner({ sessionId, onFinished }: Props) {
           setTimerAnchor={setTimerAnchor}
         />
       ) : (
-        <p>Training abgeschlossen.</p>
+        <p>Training completed.</p>
       )}
       <button type="button" className="btn-danger" onClick={() => abortDialogRef.current?.open()}>
-        Training abbrechen
+        Abort training
       </button>
       <ConfirmDialog
         ref={abortDialogRef}
-        message="Training wirklich abbrechen?"
-        confirmLabel="Abbrechen"
+        message="Really abort the training?"
+        confirmLabel="Abort"
         onConfirm={() => setStatus('aborted')}
       />
     </div>

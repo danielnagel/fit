@@ -21,7 +21,7 @@ async function setupPlanWithDay(
   const plan = await createPlan(agent, {
     days: [
       {
-        name: 'Tag 1',
+        name: 'Day 1',
         blocks: [
           {
             training_method_id: method.id,
@@ -46,7 +46,7 @@ describe('POST /api/sessions', () => {
   it('rejects starting a session without an active week', async () => {
     const res = await agent.post('/api/sessions').send({ plan_day_id: 1 });
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/aktive Woche/);
+    expect(res.body.message).toMatch(/active week/);
   });
 
   it('rejects a plan_day_id that does not belong to the active week\'s plan', async () => {
@@ -56,7 +56,7 @@ describe('POST /api/sessions', () => {
     const res = await agent.post('/api/sessions').send({ plan_day_id: otherPlan.id });
 
     expect(res.status).toBe(400);
-    expect(res.body.message).toMatch(/gehört nicht/);
+    expect(res.body.message).toMatch(/does not belong/);
   });
 
   it('creates a session with a frozen day snapshot', async () => {
@@ -66,7 +66,7 @@ describe('POST /api/sessions', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.status).toBe('in_progress');
-    expect(res.body.day_snapshot.name).toBe('Tag 1');
+    expect(res.body.day_snapshot.name).toBe('Day 1');
     expect(res.body.day_snapshot.blocks).toHaveLength(1);
     expect(res.body.day_snapshot.blocks[0].training_method.name).toBe(method.name);
     expect(res.body.day_snapshot.blocks[0].exercises[0].exercise_id).toBe(exercise.id);
@@ -176,11 +176,11 @@ describe('plan_block_exercise_id (same exercise reused across pairs of a block)'
     const method = await createTrainingMethod(agent, { scope: 'pair', rounds: 2 });
     const a = await createExercise(agent);
     const b = await createExercise(agent);
-    // "a" ist mit drei Paaren verschraenkt, genau wie "Türziehen" im real gemeldeten Fall.
+    // "a" is interlinked with three pairs, exactly like the door pull in the case reported in practice.
     const plan = await createPlan(agent, {
       days: [
         {
-          name: 'Tag 1',
+          name: 'Day 1',
           blocks: [
             {
               training_method_id: method.id,
@@ -212,7 +212,7 @@ describe('plan_block_exercise_id (same exercise reused across pairs of a block)'
     const plan = await createPlan(agent, {
       days: [
         {
-          name: 'Tag 1',
+          name: 'Day 1',
           blocks: [{ training_method_id: method.id, exercises: [{ exercise_id: a.id }, { exercise_id: a.id }] }],
         },
       ],
@@ -271,9 +271,9 @@ describe('finished-exercises', () => {
     expect(second.body.finished_exercises).toEqual([{ exercise_id: exercise.id, plan_block_exercise_id: slotId }]);
   });
 
-  // Regression: dieselbe Uebung (nur ueber die im Slot festgehaltene Variante/Note unterschieden)
-  // taucht mehrfach im selben Blocks auf -- jeder Slot muss unabhaengig als "fertig" markierbar
-  // sein, exercise_id allein darf das nicht blockieren.
+  // Regression: the same exercise (only distinguished by the variant/note stored in the slot)
+  // appears several times in the same block -- each slot must be markable as "done" independently,
+  // exercise_id alone must not block that.
   it('lets the same reused exercise be finished independently per slot', async () => {
     const method = await createTrainingMethod(agent, {
       scope: 'all',
@@ -286,7 +286,7 @@ describe('finished-exercises', () => {
     const plan = await createPlan(agent, {
       days: [
         {
-          name: 'Tag 1',
+          name: 'Day 1',
           blocks: [
             {
               training_method_id: method.id,

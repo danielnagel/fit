@@ -33,7 +33,7 @@ export default function DurationInput({ seconds, onChange }: Props) {
         type="number"
         min={0}
         max={59}
-        placeholder="sek"
+        placeholder="sec"
         value={secs}
         onChange={(e) => update(minutes, e.target.value)}
         className="field w-16"

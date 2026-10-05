@@ -30,60 +30,60 @@ type TrainingMethodInput = {
 
 function validateTrainingMethod(input: TrainingMethodInput): string | null {
   if (typeof input.name !== 'string' || !input.name.trim()) {
-    return 'name ist erforderlich';
+    return 'name is required';
   }
   if (!input.scope || !SCOPES.includes(input.scope)) {
-    return 'ungültiger scope';
+    return 'invalid scope';
   }
   if (!input.timing_family || !TIMING_FAMILIES.includes(input.timing_family)) {
-    return 'ungültige timing_family';
+    return 'invalid timing_family';
   }
 
   switch (input.timing_family) {
     case 'fixed-window-remainder':
       if (!Number.isInteger(input.window_seconds) || input.window_seconds! <= 0) {
-        return 'window_seconds ist erforderlich';
+        return 'window_seconds is required';
       }
       break;
     case 'fixed-work-rest':
       if (!Number.isInteger(input.work_seconds) || input.work_seconds! <= 0) {
-        return 'work_seconds ist erforderlich';
+        return 'work_seconds is required';
       }
       if (!Number.isInteger(input.rest_seconds) || input.rest_seconds! <= 0) {
-        return 'rest_seconds ist erforderlich';
+        return 'rest_seconds is required';
       }
       break;
     case 'self-paced':
       if (!input.rest_formula || !REST_FORMULAS.includes(input.rest_formula)) {
-        return 'rest_formula ist erforderlich';
+        return 'rest_formula is required';
       }
       if (input.rest_formula === 'proportional' && (typeof input.rest_factor !== 'number' || input.rest_factor <= 0)) {
-        return 'rest_factor ist erforderlich';
+        return 'rest_factor is required';
       }
       if (input.rest_formula === 'fixed' && (!Number.isInteger(input.rest_seconds) || input.rest_seconds! < 0)) {
-        return 'rest_seconds ist erforderlich';
+        return 'rest_seconds is required';
       }
       break;
   }
 
   if (!input.stop_condition || !STOP_CONDITIONS.includes(input.stop_condition)) {
-    return 'ungültige stop_condition';
+    return 'invalid stop_condition';
   }
   if (input.stop_condition === 'fixed-count' && (!Number.isInteger(input.rounds) || input.rounds! <= 0)) {
-    return 'rounds ist erforderlich';
+    return 'rounds is required';
   }
   if (
     input.stop_condition === 'time-budget' &&
     (!Number.isInteger(input.total_duration_seconds) || input.total_duration_seconds! <= 0)
   ) {
-    return 'total_duration_seconds ist erforderlich';
+    return 'total_duration_seconds is required';
   }
 
   return null;
 }
 
-// Nur die zur timing_family/stop_condition passenden Spalten behalten, Rest auf NULL setzen —
-// gleiches Muster wie frueher bei plan_days.type (siehe 0006_day_is_block.sql).
+// Keep only the columns matching timing_family/stop_condition, set the rest to NULL —
+// same pattern as previously with plan_days.type (see 0006_day_is_block.sql).
 function normalize(input: TrainingMethodInput) {
   return {
     name: input.name!.trim(),
@@ -121,7 +121,7 @@ trainingMethodsRouter.get('/:id', async (req, res) => {
     currentUser(req).id,
   ]);
   if (result.rows.length === 0) {
-    res.status(404).json({ message: 'Trainingsmethode nicht gefunden' });
+    res.status(404).json({ message: 'Training method not found' });
     return;
   }
   res.json(result.rows[0]);
@@ -192,7 +192,7 @@ trainingMethodsRouter.put('/:id', async (req, res) => {
     ],
   );
   if (result.rows.length === 0) {
-    res.status(404).json({ message: 'Trainingsmethode nicht gefunden' });
+    res.status(404).json({ message: 'Training method not found' });
     return;
   }
   res.json(result.rows[0]);
@@ -205,13 +205,13 @@ trainingMethodsRouter.delete('/:id', async (req, res) => {
       currentUser(req).id,
     ]);
     if (result.rowCount === 0) {
-      res.status(404).json({ message: 'Trainingsmethode nicht gefunden' });
+      res.status(404).json({ message: 'Training method not found' });
       return;
     }
     res.status(204).send();
   } catch (err) {
     if ((err as { code?: string }).code === '23503') {
-      res.status(409).json({ message: 'Trainingsmethode wird noch in einem Plan verwendet' });
+      res.status(409).json({ message: 'Training method is still used in a plan' });
       return;
     }
     res.status(500).json({ message: (err as Error).message });

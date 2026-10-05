@@ -1,42 +1,42 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Trainingsmethoden', () => {
-  test('legt für jede Timing-Familie eine Methode an, bearbeitet und löscht eine davon', async ({ page }) => {
+test.describe('Training methods', () => {
+  test('creates a method for every timing family, edits and deletes one of them', async ({ page }) => {
     await page.goto('/training-methods');
 
-    // 1) fixed-window-remainder bleibt auf den Formular-Defaults (Umfang/Stopp-Bedingung unveraendert).
-    await page.getByLabel('Name').fill('E2E Fenstermethode');
-    await page.getByRole('button', { name: 'Hinzufügen' }).click();
-    await expect(page.locator('li').filter({ hasText: 'E2E Fenstermethode' })).toContainText('Festes Zeitfenster je Runde');
+    // 1) fixed-window-remainder stays on the form defaults (scope/stop condition unchanged).
+    await page.getByLabel('Name').fill('E2E window method');
+    await page.getByRole('button', { name: 'Add' }).click();
+    await expect(page.locator('li').filter({ hasText: 'E2E window method' })).toContainText('Fixed time window per round');
 
     // 2) fixed-work-rest
-    await page.getByLabel('Name').fill('E2E Belastungsmethode');
-    await page.getByLabel('Timing').selectOption({ label: 'Feste Belastung/Pause je Runde' });
-    await page.getByRole('button', { name: 'Hinzufügen' }).click();
-    await expect(page.locator('li').filter({ hasText: 'E2E Belastungsmethode' })).toContainText(
-      'Feste Belastung/Pause je Runde',
+    await page.getByLabel('Name').fill('E2E work method');
+    await page.getByLabel('Timing').selectOption({ label: 'Fixed work/rest per round' });
+    await page.getByRole('button', { name: 'Add' }).click();
+    await expect(page.locator('li').filter({ hasText: 'E2E work method' })).toContainText(
+      'Fixed work/rest per round',
     );
 
     // 3) self-paced
-    await page.getByLabel('Name').fill('E2E Tempomethode');
-    await page.getByLabel('Timing').selectOption({ label: 'Selbstbestimmtes Tempo' });
-    await page.getByRole('button', { name: 'Hinzufügen' }).click();
-    await expect(page.locator('li').filter({ hasText: 'E2E Tempomethode' })).toContainText('Selbstbestimmtes Tempo');
+    await page.getByLabel('Name').fill('E2E tempo method');
+    await page.getByLabel('Timing').selectOption({ label: 'Self-paced' });
+    await page.getByRole('button', { name: 'Add' }).click();
+    await expect(page.locator('li').filter({ hasText: 'E2E tempo method' })).toContainText('Self-paced');
 
-    // Bearbeiten -- nach dem Umschalten in den Edit-Modus enthaelt das <li> den Namen nur noch
-    // als Input-Value, nicht mehr als Text, daher hier ueber den "Speichern"-Button scopen statt
-    // ueber hasText (sonst matcht der Row-Locator nach dem Moduswechsel nichts mehr).
-    const windowRow = page.locator('li').filter({ hasText: 'E2E Fenstermethode' });
-    await windowRow.getByRole('button', { name: 'Bearbeiten' }).click();
-    const editingRow = page.locator('li').filter({ has: page.getByRole('button', { name: 'Speichern' }) });
-    await editingRow.getByLabel('Name').fill('E2E Fenstermethode bearbeitet');
-    await editingRow.getByRole('button', { name: 'Speichern' }).click();
-    await expect(page.locator('li').filter({ hasText: 'E2E Fenstermethode bearbeitet' })).toBeVisible();
+    // Edit -- after switching into edit mode the <li> only contains the name as an input
+    // value, no longer as text, so scope via the "Save" button here instead of
+    // hasText (otherwise the row locator no longer matches anything after the mode switch).
+    const windowRow = page.locator('li').filter({ hasText: 'E2E window method' });
+    await windowRow.getByRole('button', { name: 'Edit' }).click();
+    const editingRow = page.locator('li').filter({ has: page.getByRole('button', { name: 'Save' }) });
+    await editingRow.getByLabel('Name').fill('E2E window method edited');
+    await editingRow.getByRole('button', { name: 'Save' }).click();
+    await expect(page.locator('li').filter({ hasText: 'E2E window method edited' })).toBeVisible();
 
-    // Löschen (unbenutzt, darf ohne Konflikt geloescht werden)
-    const tempoRow = page.locator('li').filter({ hasText: 'E2E Tempomethode' });
-    await tempoRow.getByRole('button', { name: 'Löschen' }).click();
-    await page.getByRole('button', { name: 'Löschen' }).last().click();
-    await expect(page.locator('li').filter({ hasText: 'E2E Tempomethode' })).toHaveCount(0);
+    // Delete (unused, may be deleted without conflict)
+    const tempoRow = page.locator('li').filter({ hasText: 'E2E tempo method' });
+    await tempoRow.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: 'Delete' }).last().click();
+    await expect(page.locator('li').filter({ hasText: 'E2E tempo method' })).toHaveCount(0);
   });
 });

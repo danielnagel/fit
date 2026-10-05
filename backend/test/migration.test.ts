@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
 import { runMigrations } from '../src/migrate.js';
 
-// Eigenes Schema statt der gemeinsamen Test-DB, die das globale Setup bereits voll migriert hat.
+// Separate schema instead of the shared test DB, which the global setup has already fully migrated.
 const SCHEMA = 'migration_test';
 
 const adminPool = new pg.Pool();
@@ -13,11 +13,11 @@ beforeAll(async () => {
   await adminPool.query(`CREATE SCHEMA ${SCHEMA}`);
   await runMigrations(pool, { upTo: '0016_session_finished_exercise_slot.sql' });
 
-  // Bestand vor 0017: ein Plan mit aktiver Woche, Session und geloggtem Satz (frisches Schema, IDs ab 1).
+  // State before 0017: a plan with an active week, a session and a logged set (fresh schema, IDs from 1).
   await pool.query(`
-    INSERT INTO exercises (name) VALUES ('Kniebeuge'), ('Liegestuetz');
-    INSERT INTO plans (name) VALUES ('Ganzkoerper');
-    INSERT INTO plan_days (plan_id, name, day_order) VALUES (1, 'Tag A', 0);
+    INSERT INTO exercises (name) VALUES ('Squat'), ('Push-up');
+    INSERT INTO plans (name) VALUES ('Full body');
+    INSERT INTO plan_days (plan_id, name, day_order) VALUES (1, 'Day A', 0);
     INSERT INTO plan_blocks (plan_day_id, block_order, training_method_id) VALUES (1, 0, 1);
     INSERT INTO plan_block_exercises (plan_block_id, exercise_id, exercise_order) VALUES (1, 1, 0);
     INSERT INTO plan_weeks (plan_id, week_number) VALUES (1, 1);
@@ -79,8 +79,8 @@ describe('migration 0017_auth_and_ownership', () => {
     );
     const userB = rows[0].id;
 
-    await pool.query('INSERT INTO exercises (user_id, name) VALUES ($1, $2)', [userB, 'Kniebeuge']);
-    await expect(pool.query("INSERT INTO exercises (user_id, name) VALUES (1, 'Kniebeuge')")).rejects.toThrow(
+    await pool.query('INSERT INTO exercises (user_id, name) VALUES ($1, $2)', [userB, 'Squat']);
+    await expect(pool.query("INSERT INTO exercises (user_id, name) VALUES (1, 'Squat')")).rejects.toThrow(
       /exercises_user_name_idx/,
     );
 
@@ -95,6 +95,6 @@ describe('migration 0017_auth_and_ownership', () => {
   });
 
   it('requires an owner for new plans', async () => {
-    await expect(pool.query("INSERT INTO plans (name) VALUES ('ohne Besitzer')")).rejects.toThrow(/user_id/);
+    await expect(pool.query("INSERT INTO plans (name) VALUES ('without owner')")).rejects.toThrow(/user_id/);
   });
 });

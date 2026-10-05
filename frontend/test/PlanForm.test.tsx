@@ -21,7 +21,7 @@ afterEach(() => {
 
 const methodSingle: TrainingMethod = {
   id: 1,
-  name: 'Zirkel',
+  name: 'Circuit',
   scope: 'single',
   timing_family: 'fixed-window-remainder',
   window_seconds: 180,
@@ -51,7 +51,7 @@ const methodPair: TrainingMethod = {
 
 const methodHiit: TrainingMethod = {
   id: 4,
-  name: 'Hochintensitaetssatz',
+  name: 'High-intensity set',
   scope: 'single',
   timing_family: 'fixed-work-rest',
   window_seconds: null,
@@ -66,7 +66,7 @@ const methodHiit: TrainingMethod = {
 
 const methodStufensatz: TrainingMethod = {
   id: 5,
-  name: 'Stufensatz',
+  name: 'Ladder set',
   scope: 'single',
   timing_family: 'self-paced',
   window_seconds: null,
@@ -81,7 +81,7 @@ const methodStufensatz: TrainingMethod = {
 
 const methodZirkel: TrainingMethod = {
   id: 6,
-  name: 'Zirkel-Intervall',
+  name: 'Circuit interval',
   scope: 'all',
   timing_family: 'self-paced',
   window_seconds: null,
@@ -96,7 +96,7 @@ const methodZirkel: TrainingMethod = {
 
 const methodPairWindow: TrainingMethod = {
   id: 3,
-  name: 'Supersatz',
+  name: 'Superset',
   scope: 'pair',
   timing_family: 'fixed-window-remainder',
   window_seconds: 240,
@@ -110,12 +110,12 @@ const methodPairWindow: TrainingMethod = {
 };
 
 const exercises = [
-  { id: 1, name: 'Kniebeuge', is_unilateral: false },
-  { id: 2, name: 'Liegestütz', is_unilateral: false },
-  { id: 3, name: 'Bankdrücken', is_unilateral: false },
-  { id: 4, name: 'Rudern', is_unilateral: false },
-  { id: 5, name: 'Einarmiges Rudern', is_unilateral: true },
-  { id: 6, name: 'Einarmiges Kurzhanteldrücken', is_unilateral: true },
+  { id: 1, name: 'Squat', is_unilateral: false },
+  { id: 2, name: 'Push-up', is_unilateral: false },
+  { id: 3, name: 'Bench press', is_unilateral: false },
+  { id: 4, name: 'Row', is_unilateral: false },
+  { id: 5, name: 'One-arm row', is_unilateral: true },
+  { id: 6, name: 'One-arm dumbbell press', is_unilateral: true },
 ];
 
 describe('PlanForm', () => {
@@ -127,42 +127,42 @@ describe('PlanForm', () => {
     render(<PlanForm exercises={exercises} onDone={onDone} onCancel={vi.fn()} />);
 
     await screen.findByLabelText('Name');
-    await user.type(screen.getByLabelText('Name'), 'Testplan');
-    await user.type(screen.getByPlaceholderText('Trainingstag-Name'), 'Tag 1');
+    await user.type(screen.getByLabelText('Name'), 'Test plan');
+    await user.type(screen.getByPlaceholderText('Training day name'), 'Day 1');
 
     // Block 1 (default: single-scope method) — pick an exercise and fill reps + note.
     let combos = screen.getAllByRole('combobox');
-    await user.selectOptions(combos[1], 'Kniebeuge');
-    await user.type(screen.getAllByLabelText('Wdh. von')[0], '8');
-    await user.type(screen.getAllByLabelText('bis')[0], '10');
-    await user.type(screen.getByPlaceholderText('Variante (optional, z. B. 3 Sek. Haltezeit am tiefsten Punkt)'), 'langsam');
+    await user.selectOptions(combos[1], 'Squat');
+    await user.type(screen.getAllByLabelText('Reps from')[0], '8');
+    await user.type(screen.getAllByLabelText('to')[0], '10');
+    await user.type(screen.getByPlaceholderText('Variant (optional, e.g. 3 s hold at the bottom)'), 'langsam');
 
     // Add a second block and switch it to the pair-scope method.
-    await user.click(screen.getByRole('button', { name: 'Block hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Add block' }));
     combos = screen.getAllByRole('combobox');
     expect(combos).toHaveLength(4); // block1 method+exercise, block2 method+exercise
     await user.selectOptions(combos[2], 'Superset');
 
     combos = screen.getAllByRole('combobox');
     expect(combos).toHaveLength(5); // pair method now has two exercise slots
-    expect(screen.getByText('schwer')).toBeInTheDocument();
-    expect(screen.getByText('leicht')).toBeInTheDocument();
-    await user.selectOptions(combos[3], 'Bankdrücken');
-    await user.selectOptions(combos[4], 'Rudern');
+    expect(screen.getByText('heavy')).toBeInTheDocument();
+    expect(screen.getByText('light')).toBeInTheDocument();
+    await user.selectOptions(combos[3], 'Bench press');
+    await user.selectOptions(combos[4], 'Row');
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ id: 99 }, true, 201));
 
-    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenLastCalledWith('/api/plans', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Testplan',
+        name: 'Test plan',
         days: [
           {
-            name: 'Tag 1',
+            name: 'Day 1',
             blocks: [
               {
                 training_method_id: 1,
@@ -187,17 +187,17 @@ describe('PlanForm', () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
         id: 7,
-        name: 'Bestehender Plan',
+        name: 'Existing plan',
         days: [
           {
             id: 10,
-            name: 'Tag A',
+            name: 'Day A',
             blocks: [
               {
                 id: 100,
                 training_method: methodPair,
                 exercises: [
-                  { exercise_id: 3, reps_min: 5, reps_max: 9, note: 'schwer variante' },
+                  { exercise_id: 3, reps_min: 5, reps_max: 9, note: 'heavy variante' },
                   { exercise_id: 4, reps_min: 5, reps_max: 9, note: null },
                 ],
               },
@@ -209,44 +209,44 @@ describe('PlanForm', () => {
 
     render(<PlanForm planId={7} exercises={exercises} onDone={vi.fn()} onCancel={vi.fn()} />);
 
-    expect(await screen.findByDisplayValue('Bestehender Plan')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Tag A')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Existing plan')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Day A')).toBeInTheDocument();
 
     const combos = screen.getAllByRole('combobox');
     expect(combos[0]).toHaveValue(String(methodPair.id));
     expect(combos[1]).toHaveValue('3');
     expect(combos[2]).toHaveValue('4');
 
-    expect(screen.getAllByLabelText('Wdh. von')[0]).toHaveValue(5);
-    expect(screen.getAllByLabelText('bis')[0]).toHaveValue(9);
-    expect(screen.getByDisplayValue('schwer variante')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Reps from')[0]).toHaveValue(5);
+    expect(screen.getAllByLabelText('to')[0]).toHaveValue(9);
+    expect(screen.getByDisplayValue('heavy variante')).toBeInTheDocument();
   });
 
-  it('hides the reps inputs for fixed-work-rest (Hochintensitätssatz) blocks, submitting null reps', async () => {
+  it('hides the reps inputs for fixed-work-rest (High-intensity set) blocks, submitting null reps', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([methodHiit]));
 
     render(<PlanForm exercises={exercises} onDone={vi.fn()} onCancel={vi.fn()} />);
 
     await screen.findByLabelText('Name');
-    await user.type(screen.getByLabelText('Name'), 'Testplan');
-    await user.type(screen.getByPlaceholderText('Trainingstag-Name'), 'Tag 1');
-    await user.selectOptions(screen.getAllByRole('combobox')[1], 'Kniebeuge');
+    await user.type(screen.getByLabelText('Name'), 'Test plan');
+    await user.type(screen.getByPlaceholderText('Training day name'), 'Day 1');
+    await user.selectOptions(screen.getAllByRole('combobox')[1], 'Squat');
 
-    expect(screen.queryByLabelText('Wdh. von')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('bis')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Reps from')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('to')).not.toBeInTheDocument();
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ id: 99 }, true, 201));
-    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/plans',
       expect.objectContaining({
         body: JSON.stringify({
-          name: 'Testplan',
+          name: 'Test plan',
           days: [
             {
-              name: 'Tag 1',
+              name: 'Day 1',
               blocks: [
                 {
                   training_method_id: 4,
@@ -260,31 +260,31 @@ describe('PlanForm', () => {
     );
   });
 
-  it('only offers the einseitig checkbox for unilateral exercises in fixed-window-remainder blocks, and resets it on exercise change', async () => {
+  it('only offers the unilateral checkbox for unilateral exercises in fixed-window-remainder blocks, and resets it on exercise change', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([methodSingle, methodPair]));
 
     render(<PlanForm exercises={exercises} onDone={vi.fn()} onCancel={vi.fn()} />);
 
     await screen.findByLabelText('Name');
-    await user.type(screen.getByPlaceholderText('Trainingstag-Name'), 'Tag 1');
+    await user.type(screen.getByPlaceholderText('Training day name'), 'Day 1');
 
     // methodSingle is fixed-window-remainder, but the default exercise slot is empty -> no checkbox yet.
-    expect(screen.queryByLabelText('einseitig')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('unilateral')).not.toBeInTheDocument();
 
     const combos = screen.getAllByRole('combobox');
-    await user.selectOptions(combos[1], 'Kniebeuge');
-    expect(screen.queryByLabelText('einseitig')).not.toBeInTheDocument();
+    await user.selectOptions(combos[1], 'Squat');
+    expect(screen.queryByLabelText('unilateral')).not.toBeInTheDocument();
 
-    await user.selectOptions(combos[1], 'Einarmiges Rudern');
-    await user.click(screen.getByLabelText('einseitig'));
+    await user.selectOptions(combos[1], 'One-arm row');
+    await user.click(screen.getByLabelText('unilateral'));
 
-    await user.selectOptions(combos[1], 'Kniebeuge');
-    expect(screen.queryByLabelText('einseitig')).not.toBeInTheDocument();
+    await user.selectOptions(combos[1], 'Squat');
+    expect(screen.queryByLabelText('unilateral')).not.toBeInTheDocument();
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ id: 99 }, true, 201));
-    await user.type(screen.getByLabelText('Name'), 'Testplan');
-    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    await user.type(screen.getByLabelText('Name'), 'Test plan');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/plans',
@@ -294,62 +294,62 @@ describe('PlanForm', () => {
     );
   });
 
-  it('also offers the einseitig checkbox for Stufensatz and Hochintensitätssatz, but not for Zirkel-Intervall', async () => {
+  it('also offers the unilateral checkbox for Ladder set and High-intensity set, but not for Circuit interval', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([methodStufensatz, methodHiit, methodZirkel]));
 
     render(<PlanForm exercises={exercises} onDone={vi.fn()} onCancel={vi.fn()} />);
 
     await screen.findByLabelText('Name');
-    await user.type(screen.getByPlaceholderText('Trainingstag-Name'), 'Tag 1');
+    await user.type(screen.getByPlaceholderText('Training day name'), 'Day 1');
 
     // Default block uses methodStufensatz (self-paced, scope 'single').
     let combos = screen.getAllByRole('combobox');
-    await user.selectOptions(combos[1], 'Einarmiges Rudern');
-    expect(screen.getByLabelText('einseitig')).toBeInTheDocument();
+    await user.selectOptions(combos[1], 'One-arm row');
+    expect(screen.getByLabelText('unilateral')).toBeInTheDocument();
 
     // Switch to the fixed-work-rest method -> still offered.
-    await user.selectOptions(combos[0], 'Hochintensitaetssatz');
+    await user.selectOptions(combos[0], 'High-intensity set');
     combos = screen.getAllByRole('combobox');
-    await user.selectOptions(combos[1], 'Einarmiges Rudern');
-    expect(screen.getByLabelText('einseitig')).toBeInTheDocument();
+    await user.selectOptions(combos[1], 'One-arm row');
+    expect(screen.getByLabelText('unilateral')).toBeInTheDocument();
 
     // Switch to Zirkel-Intervall (self-paced, scope 'all') -> not offered.
-    await user.selectOptions(combos[0], 'Zirkel-Intervall');
+    await user.selectOptions(combos[0], 'Circuit interval');
     combos = screen.getAllByRole('combobox');
-    await user.selectOptions(combos[1], 'Einarmiges Rudern');
-    expect(screen.queryByLabelText('einseitig')).not.toBeInTheDocument();
+    await user.selectOptions(combos[1], 'One-arm row');
+    expect(screen.queryByLabelText('unilateral')).not.toBeInTheDocument();
   });
 
-  it('activates einseitig independently per exercise in a pair-scope fixed-window-remainder block', async () => {
+  it('activates unilateral independently per exercise in a pair-scope fixed-window-remainder block', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([methodPairWindow]));
 
     render(<PlanForm exercises={exercises} onDone={vi.fn()} onCancel={vi.fn()} />);
 
     await screen.findByLabelText('Name');
-    await user.type(screen.getByLabelText('Name'), 'Testplan');
-    await user.type(screen.getByPlaceholderText('Trainingstag-Name'), 'Tag 1');
+    await user.type(screen.getByLabelText('Name'), 'Test plan');
+    await user.type(screen.getByPlaceholderText('Training day name'), 'Day 1');
 
     const combos = screen.getAllByRole('combobox');
-    await user.selectOptions(combos[1], 'Einarmiges Rudern');
-    await user.selectOptions(combos[2], 'Einarmiges Kurzhanteldrücken');
+    await user.selectOptions(combos[1], 'One-arm row');
+    await user.selectOptions(combos[2], 'One-arm dumbbell press');
 
-    const checkboxes = screen.getAllByLabelText('einseitig');
+    const checkboxes = screen.getAllByLabelText('unilateral');
     expect(checkboxes).toHaveLength(2);
     await user.click(checkboxes[0]);
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ id: 99 }, true, 201));
-    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(fetchMock).toHaveBeenLastCalledWith(
       '/api/plans',
       expect.objectContaining({
         body: JSON.stringify({
-          name: 'Testplan',
+          name: 'Test plan',
           days: [
             {
-              name: 'Tag 1',
+              name: 'Day 1',
               blocks: [
                 {
                   training_method_id: 3,
@@ -373,14 +373,14 @@ describe('PlanForm', () => {
     render(<PlanForm exercises={exercises} onDone={vi.fn()} onCancel={vi.fn()} />);
 
     await screen.findByLabelText('Name');
-    await user.type(screen.getByLabelText('Name'), 'Testplan');
-    await user.type(screen.getByPlaceholderText('Trainingstag-Name'), 'Tag 1');
-    await user.selectOptions(screen.getAllByRole('combobox')[1], 'Kniebeuge');
+    await user.type(screen.getByLabelText('Name'), 'Test plan');
+    await user.type(screen.getByPlaceholderText('Training day name'), 'Day 1');
+    await user.selectOptions(screen.getAllByRole('combobox')[1], 'Squat');
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Ungültige Daten' }, false, 400));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Invalid data' }, false, 400));
 
-    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText('Fehler: Ungültige Daten')).toBeInTheDocument();
+    expect(await screen.findByText('Error: Invalid data')).toBeInTheDocument();
   });
 });

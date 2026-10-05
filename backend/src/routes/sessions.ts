@@ -5,8 +5,8 @@ import { currentUser } from '../middleware/requireAuth.js';
 
 export const sessionsRouter = Router();
 
-// Alle /:id-Routen (inkl. Sub-Ressourcen) nur fuer Sessions des eingeloggten Benutzers; fremde und
-// unbekannte IDs liefern gleichermassen 404, damit niemand erfaehrt, welche IDs existieren.
+// All /:id routes (incl. sub-resources) only for sessions of the logged-in user; foreign and
+// unknown IDs both answer 404 so nobody learns which IDs exist.
 sessionsRouter.param('id', async (req, res, next, id: string) => {
   const sessionId = Number(id);
   const result = Number.isInteger(sessionId)
@@ -18,7 +18,7 @@ sessionsRouter.param('id', async (req, res, next, id: string) => {
       )
     : { rows: [] };
   if (result.rows.length === 0) {
-    res.status(404).json({ message: 'Session nicht gefunden' });
+    res.status(404).json({ message: 'Session not found' });
     return;
   }
   next();
@@ -103,10 +103,10 @@ async function loadPreviousLoggedSets(planDayId: number | null, sessionId: numbe
   return previousLoggedResult.rows;
 }
 
-// "Rekord" gilt fuer Uebungen in self-paced-Bloecken (frueher hart auf type === 'ladder' prueft):
-// max(unit_index) = weiteste erreichte Stufe/Runde, max(reps) = meiste Wiederholungen dabei.
-// Wie bisher ohne Einschraenkung auf denselben plan_day_id -- Bestleistung ueber alle self-paced-
-// Sessions dieser Uebung hinweg, unabhaengig vom konkreten Plan/Tag.
+// "Record" applies to exercises in self-paced blocks (previously hard-coded to type === 'ladder'):
+// max(unit_index) = furthest step/round reached, max(reps) = most reps achieved there.
+// As before without restricting to the same plan_day_id -- best performance across all self-paced
+// sessions of this exercise, regardless of the specific plan/day.
 async function loadStageRecords(exerciseIds: number[], sessionId: number, userId: number) {
   if (exerciseIds.length === 0) return [];
 
@@ -209,7 +209,7 @@ sessionsRouter.get('/', async (req, res) => {
 sessionsRouter.get('/:id', async (req, res) => {
   const session = await loadSessionDetail(Number(req.params.id), currentUser(req).id);
   if (!session) {
-    res.status(404).json({ message: 'Session nicht gefunden' });
+    res.status(404).json({ message: 'Session not found' });
     return;
   }
   res.json(session);
@@ -218,7 +218,7 @@ sessionsRouter.get('/:id', async (req, res) => {
 sessionsRouter.post('/', async (req, res) => {
   const body = (req.body ?? {}) as { plan_day_id?: number };
   if (!Number.isInteger(body.plan_day_id)) {
-    res.status(400).json({ message: 'plan_day_id ist erforderlich' });
+    res.status(400).json({ message: 'plan_day_id is required' });
     return;
   }
 
@@ -228,7 +228,7 @@ sessionsRouter.post('/', async (req, res) => {
     [userId],
   );
   if (activeWeekResult.rows.length === 0) {
-    res.status(400).json({ message: 'Keine aktive Woche — zuerst eine Woche starten' });
+    res.status(400).json({ message: 'No active week — start a week first' });
     return;
   }
   const activeWeek = activeWeekResult.rows[0];
@@ -238,7 +238,7 @@ sessionsRouter.post('/', async (req, res) => {
     activeWeek.plan_id,
   ]);
   if (dayCheck.rows.length === 0) {
-    res.status(400).json({ message: 'Trainingstag gehört nicht zum Plan der aktiven Woche' });
+    res.status(400).json({ message: 'Training day does not belong to the plan of the active week' });
     return;
   }
 
@@ -255,7 +255,7 @@ sessionsRouter.post('/', async (req, res) => {
 sessionsRouter.patch('/:id', async (req, res) => {
   const { status } = (req.body ?? {}) as { status?: string };
   if (status !== 'in_progress' && status !== 'completed' && status !== 'aborted') {
-    res.status(400).json({ message: 'ungültiger Status' });
+    res.status(400).json({ message: 'invalid status' });
     return;
   }
 
@@ -266,7 +266,7 @@ sessionsRouter.patch('/:id', async (req, res) => {
     [status, req.params.id],
   );
   if (result.rowCount === 0) {
-    res.status(404).json({ message: 'Session nicht gefunden' });
+    res.status(404).json({ message: 'Session not found' });
     return;
   }
   res.json(await loadSessionDetail(Number(req.params.id), currentUser(req).id));
@@ -283,19 +283,19 @@ sessionsRouter.post('/:id/logged-sets', async (req, res) => {
     side?: 'left' | 'right' | null;
   };
   if (!Number.isInteger(exercise_id) || !Number.isInteger(unit_index)) {
-    res.status(400).json({ message: 'exercise_id und unit_index sind erforderlich' });
+    res.status(400).json({ message: 'exercise_id and unit_index are required' });
     return;
   }
   if (plan_block_exercise_id !== undefined && plan_block_exercise_id !== null && !Number.isInteger(plan_block_exercise_id)) {
-    res.status(400).json({ message: 'plan_block_exercise_id muss eine Zahl oder null sein' });
+    res.status(400).json({ message: 'plan_block_exercise_id must be a number or null' });
     return;
   }
   if (side !== undefined && side !== null && side !== 'left' && side !== 'right') {
-    res.status(400).json({ message: 'side muss "left", "right" oder null sein' });
+    res.status(400).json({ message: 'side must be "left", "right" or null' });
     return;
   }
   if (!(await ownsExercise(currentUser(req).id, exercise_id!))) {
-    res.status(400).json({ message: 'unbekannte exercise_id' });
+    res.status(400).json({ message: 'unknown exercise_id' });
     return;
   }
 
@@ -315,23 +315,23 @@ sessionsRouter.post('/:id/finished-exercises', async (req, res) => {
     plan_block_exercise_id?: number | null;
   };
   if (!Number.isInteger(exercise_id)) {
-    res.status(400).json({ message: 'exercise_id ist erforderlich' });
+    res.status(400).json({ message: 'exercise_id is required' });
     return;
   }
   if (plan_block_exercise_id !== undefined && plan_block_exercise_id !== null && !Number.isInteger(plan_block_exercise_id)) {
-    res.status(400).json({ message: 'plan_block_exercise_id muss eine Zahl oder null sein' });
+    res.status(400).json({ message: 'plan_block_exercise_id must be a number or null' });
     return;
   }
   const userId = currentUser(req).id;
   if (!(await ownsExercise(userId, exercise_id!))) {
-    res.status(400).json({ message: 'unbekannte exercise_id' });
+    res.status(400).json({ message: 'unknown exercise_id' });
     return;
   }
 
-  // exercise_id allein identifiziert nicht zuverlaessig den Plan-Slot -- dieselbe Uebung kann als
-  // andere Variante mehrfach im selben Block vorkommen. Ist plan_block_exercise_id bekannt, wird
-  // pro Slot dedupliziert, sonst (alte, vor dieser Erweiterung eingefrorene Sessions) wie bisher
-  // pro exercise_id -- siehe Migration 0016 fuer die beiden passenden partiellen Unique-Indizes.
+  // exercise_id alone doesn't reliably identify the plan slot -- the same exercise can appear several
+  // times in the same block as a different variant. If plan_block_exercise_id is known, deduplicate
+  // per slot, otherwise (old sessions frozen before this extension) per exercise_id as before --
+  // see migration 0016 for the two matching partial unique indexes.
   if (plan_block_exercise_id != null) {
     await pool.query(
       `INSERT INTO session_finished_exercises (training_session_id, exercise_id, plan_block_exercise_id)
@@ -354,12 +354,12 @@ sessionsRouter.put('/:id/timer-anchor/:slot', async (req, res) => {
   const sessionId = Number(req.params.id);
   const slot = req.params.slot;
   if (slot !== 'primary' && slot !== 'secondary') {
-    res.status(400).json({ message: 'ungültiger Slot' });
+    res.status(400).json({ message: 'invalid slot' });
     return;
   }
   const { phase_key, duration_seconds } = (req.body ?? {}) as { phase_key?: string; duration_seconds?: number };
   if (typeof phase_key !== 'string' || !phase_key || !Number.isFinite(duration_seconds)) {
-    res.status(400).json({ message: 'phase_key und duration_seconds sind erforderlich' });
+    res.status(400).json({ message: 'phase_key and duration_seconds are required' });
     return;
   }
 
@@ -376,7 +376,7 @@ sessionsRouter.put('/:id/timer-anchor/:slot', async (req, res) => {
 sessionsRouter.delete('/:id', async (req, res) => {
   const result = await pool.query('DELETE FROM training_sessions WHERE id = $1', [req.params.id]);
   if (result.rowCount === 0) {
-    res.status(404).json({ message: 'Session nicht gefunden' });
+    res.status(404).json({ message: 'Session not found' });
     return;
   }
   res.status(204).send();
@@ -388,7 +388,7 @@ sessionsRouter.delete('/:id/logged-sets/:setId', async (req, res) => {
     req.params.id,
   ]);
   if (result.rowCount === 0) {
-    res.status(404).json({ message: 'Satz nicht gefunden' });
+    res.status(404).json({ message: 'Set not found' });
     return;
   }
   res.status(204).send();
@@ -397,7 +397,7 @@ sessionsRouter.delete('/:id/logged-sets/:setId', async (req, res) => {
 sessionsRouter.patch('/:id/logged-sets/:setId', async (req, res) => {
   const { reps, side } = (req.body ?? {}) as { reps?: number | null; side?: 'left' | 'right' | null };
   if (side !== undefined && side !== null && side !== 'left' && side !== 'right') {
-    res.status(400).json({ message: 'side muss "left", "right" oder null sein' });
+    res.status(400).json({ message: 'side must be "left", "right" or null' });
     return;
   }
 
@@ -407,7 +407,7 @@ sessionsRouter.patch('/:id/logged-sets/:setId', async (req, res) => {
     [reps ?? null, side ?? null, req.params.setId, req.params.id],
   );
   if (result.rows.length === 0) {
-    res.status(404).json({ message: 'Satz nicht gefunden' });
+    res.status(404).json({ message: 'Set not found' });
     return;
   }
   res.json(result.rows[0]);

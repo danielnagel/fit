@@ -1,8 +1,8 @@
 import type { Scope } from './trainingMethods';
 import type { BlockSnapshot, FinishedExercise, LoggedSet, SnapshotExercise, TrainingMethodSnapshot } from './sessionTypes';
 
-// Eine "Einheit" ist die Gruppe Uebungen, die laut scope zusammengehoeren: eine Uebung (single),
-// ein festes Paar (pair, z. B. schwer/leicht) oder alle Uebungen des Blocks zusammen (all).
+// A "unit" is the group of exercises that belong together according to scope: one exercise (single),
+// a fixed pair (pair, e.g. heavy/light) or all exercises of the block together (all).
 export function computeUnits(scope: Scope, exercises: SnapshotExercise[]): SnapshotExercise[][] {
   if (scope === 'pair') {
     const units: SnapshotExercise[][] = [];
@@ -13,10 +13,10 @@ export function computeUnits(scope: Scope, exercises: SnapshotExercise[]): Snaps
   return exercises.map((ex) => [ex]);
 }
 
-// Identifiziert den konkreten Plan-Slot statt der (moeglicherweise im selben Block wiederholten)
-// exercise_id -- z.B. wenn dieselbe Uebung als "leicht"- und "schwer"-Variante in mehreren
-// Supersatz-Paaren desselben Blocks auftaucht. Alte, vor dieser Erweiterung eingefrorene
-// Sessions haben kein plan_block_exercise_id und fallen auf das alte exercise_id-Verhalten zurueck.
+// Identifies the concrete plan slot instead of the exercise_id (possibly repeated in the same
+// block) -- e.g. when the same exercise appears as a "light" and a "heavy" variant in several
+// superset pairs of the same block. Old sessions frozen before this extension have no
+// plan_block_exercise_id and fall back to the old exercise_id behaviour.
 export function slotKey(ex: { exercise_id: number; plan_block_exercise_id?: number | null }): number {
   return ex.plan_block_exercise_id ?? ex.exercise_id;
 }
@@ -28,9 +28,9 @@ export function countByExercise(exercises: SnapshotExercise[], logged: LoggedSet
   return counts;
 }
 
-// Alle Mitglieder einer Einheit ruecken bei fixed-window-remainder/fixed-work-rest immer gemeinsam
-// eine Runde weiter; bei self-paced entspricht eine "Runde" einer vollstaendigen Rotation durch die
-// Einheit. In allen Faellen ist die kleinste Einzel-Zaehlung die Anzahl abgeschlossener Runden.
+// With fixed-window-remainder/fixed-work-rest all members of a unit always move on one round
+// together; with self-paced a "round" is one complete rotation through the unit.
+// In all cases the smallest single count is the number of completed rounds.
 export function unitRoundCount(unit: SnapshotExercise[], counts: Map<number, number>): number {
   return Math.min(...unit.map((ex) => counts.get(slotKey(ex)) ?? 0));
 }
@@ -55,8 +55,8 @@ export function isBlockDone(block: BlockSnapshot, logged: LoggedSet[], finishedE
   return units.every((unit) => isUnitDone(unit, block.training_method, counts, finishedIds));
 }
 
-// Fuer die "Uebung X/Y"-Anzeige im laufenden Training: nur bei mehr als einer Einheit im Block
-// aussagekraeftig (z.B. bei scope 'all' gibt es ohnehin nur eine Einheit fuer den ganzen Block).
+// For the "exercise X/Y" display in the running training: only meaningful with more than one unit
+// in the block (e.g. with scope 'all' there is only one unit for the whole block anyway).
 export function activeUnitPosition(
   block: BlockSnapshot,
   logged: LoggedSet[],

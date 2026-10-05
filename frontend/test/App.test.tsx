@@ -34,20 +34,20 @@ describe('App', () => {
     window.history.pushState({}, '', '/plans');
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: 'Trainingspläne' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Training plans' })).toBeInTheDocument();
   });
 
   it('renders the exercises page on /exercises', async () => {
     window.history.pushState({}, '', '/exercises');
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: 'Übungen' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Exercises' })).toBeInTheDocument();
   });
 
   it('renders the history page on /history', async () => {
     window.history.pushState({}, '', '/history');
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: 'Trainingshistorie' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Training history' })).toBeInTheDocument();
   });
 });

@@ -25,8 +25,8 @@ describe('FixedWorkRestUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Übung 1')).toBeInTheDocument();
-    expect(screen.getByText(/Runde 1\/8/)).toBeInTheDocument();
+    expect(screen.getByText('Exercise 1')).toBeInTheDocument();
+    expect(screen.getByText(/round 1\/8/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '0' })).toBeInTheDocument();
     expect(screen.getByText('0:20')).toBeInTheDocument();
     expect(setTimerAnchor).toHaveBeenCalledWith('primary', 'b0-u0-work-0', 20);
@@ -114,7 +114,7 @@ describe('FixedWorkRestUnitRunner', () => {
       />,
     );
 
-    expect(screen.queryByLabelText('Seite')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Side')).not.toBeInTheDocument();
   });
 
   it('shows a side selector and logs the chosen side once the rest window elapses', async () => {
@@ -131,9 +131,9 @@ describe('FixedWorkRestUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Seite')).toHaveValue('left');
+    expect(screen.getByLabelText('Side')).toHaveValue('left');
     fireEvent.click(screen.getByRole('button', { name: '0' }));
-    fireEvent.change(screen.getByLabelText('Seite'), { target: { value: 'right' } });
+    fireEvent.change(screen.getByLabelText('Side'), { target: { value: 'right' } });
     await act(() => vi.advanceTimersByTimeAsync(20_000));
     await act(() => vi.advanceTimersByTimeAsync(10_000));
 
@@ -154,7 +154,7 @@ describe('FixedWorkRestUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Letztes Mal: 14 Wdh.')).toBeInTheDocument();
+    expect(screen.getByText('Last time: 14 reps')).toBeInTheDocument();
   });
 
   it('mutes the rep counter during work and highlights it during rest, with a phase label', async () => {
@@ -170,13 +170,13 @@ describe('FixedWorkRestUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Belastung', { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByText('Work', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '0' })).toHaveClass('btn');
     expect(screen.getByRole('button', { name: '0' })).not.toHaveClass('btn-primary');
 
     await act(() => vi.advanceTimersByTimeAsync(20_000));
 
-    expect(screen.getByText('Pause', { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByText('Rest', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '0' })).toHaveClass('btn-primary');
   });
 
@@ -194,7 +194,7 @@ describe('FixedWorkRestUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText('Letzte Runde: 12 Wdh.')).toBeInTheDocument();
+    expect(screen.getByText('Last round: 12 reps')).toBeInTheDocument();
   });
 
   it('advances the round based on already logged sets', () => {
@@ -211,6 +211,6 @@ describe('FixedWorkRestUnitRunner', () => {
       />,
     );
 
-    expect(screen.getByText(/Runde 2\/8/)).toBeInTheDocument();
+    expect(screen.getByText(/round 2\/8/)).toBeInTheDocument();
   });
 });

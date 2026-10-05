@@ -5,10 +5,10 @@ import Nav from '../src/Nav';
 
 const LINKS: { label: string; href: string }[] = [
   { label: 'Training', href: '/training' },
-  { label: 'Pläne', href: '/plans' },
-  { label: 'Methoden', href: '/training-methods' },
-  { label: 'Übungen', href: '/exercises' },
-  { label: 'Historie', href: '/history' },
+  { label: 'Plans', href: '/plans' },
+  { label: 'Methods', href: '/training-methods' },
+  { label: 'Exercises', href: '/exercises' },
+  { label: 'History', href: '/history' },
 ];
 
 describe('Nav', () => {
@@ -35,7 +35,7 @@ describe('Nav', () => {
       </MemoryRouter>,
     );
 
-    for (const link of screen.getAllByRole('link', { name: 'Pläne' })) {
+    for (const link of screen.getAllByRole('link', { name: 'Plans' })) {
       expect(link).toHaveAttribute('aria-current', 'page');
     }
     for (const link of screen.getAllByRole('link', { name: 'Training' })) {
@@ -50,10 +50,10 @@ describe('Nav', () => {
       </MemoryRouter>,
     );
 
-    for (const link of screen.getAllByRole('link', { name: 'Historie' })) {
+    for (const link of screen.getAllByRole('link', { name: 'History' })) {
       expect(link).toHaveAttribute('aria-current', 'page');
     }
-    for (const link of screen.getAllByRole('link', { name: 'Übungen' })) {
+    for (const link of screen.getAllByRole('link', { name: 'Exercises' })) {
       expect(link).not.toHaveAttribute('aria-current');
     }
   });
@@ -69,7 +69,7 @@ describe('Nav user menu', () => {
     );
 
     expect(screen.getByText('anna')).toBeInTheDocument();
-    screen.getByRole('button', { name: 'Abmelden' }).click();
+    screen.getByRole('button', { name: 'Log out' }).click();
     expect(onLogout).toHaveBeenCalledOnce();
   });
 });

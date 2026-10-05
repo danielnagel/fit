@@ -9,10 +9,10 @@ type Scope = 'single' | 'pair' | 'all';
 
 function exerciseCountError(scope: Scope, count: number): string | null {
   if (scope === 'pair') {
-    if (count < 2 || count % 2 !== 0) return 'Diese Methode benötigt eine gerade Anzahl Übungen (mind. 2, als Paare)';
+    if (count < 2 || count % 2 !== 0) return 'This method needs an even number of exercises (at least 2, as pairs)';
     return null;
   }
-  if (count < 1) return 'Jeder Block benötigt mindestens eine Übung';
+  if (count < 1) return 'Every block needs at least one exercise';
   return null;
 }
 
@@ -35,20 +35,20 @@ type PlanInput = { name?: string; days?: DayInput[] };
 
 async function validatePlan(plan: PlanInput, userId: number): Promise<string | null> {
   if (typeof plan.name !== 'string' || !plan.name.trim()) {
-    return 'name ist erforderlich';
+    return 'name is required';
   }
 
   const methodIds = new Set<number>();
   for (const day of plan.days ?? []) {
     if (typeof day.name !== 'string' || !day.name.trim()) {
-      return 'jeder Trainingstag benötigt einen Namen';
+      return 'every training day needs a name';
     }
     if (!day.blocks || day.blocks.length === 0) {
-      return 'jeder Trainingstag benötigt mindestens einen Block';
+      return 'every training day needs at least one block';
     }
     for (const block of day.blocks) {
       if (!Number.isInteger(block.training_method_id)) {
-        return 'jeder Block benötigt eine gültige training_method_id';
+        return 'every block needs a valid training_method_id';
       }
       methodIds.add(block.training_method_id!);
     }
@@ -77,7 +77,7 @@ async function validatePlan(plan: PlanInput, userId: number): Promise<string | n
   for (const day of plan.days ?? []) {
     for (const block of day.blocks ?? []) {
       const method = methodById.get(block.training_method_id!);
-      if (!method) return 'unbekannte training_method_id';
+      if (!method) return 'unknown training_method_id';
 
       const exercises = block.exercises ?? [];
       const countError = exerciseCountError(method.scope, exercises.length);
@@ -85,11 +85,11 @@ async function validatePlan(plan: PlanInput, userId: number): Promise<string | n
 
       for (const exercise of exercises) {
         if (!Number.isInteger(exercise.exercise_id)) {
-          return 'jede Übung benötigt eine gültige exercise_id';
+          return 'every exercise needs a valid exercise_id';
         }
-        // Fremde Übungen fallen hier ebenfalls raus (Abfrage oben ist auf den Benutzer eingeschränkt).
+        // Foreign exercises are filtered out here as well (the query above is restricted to the user).
         if (!isUnilateralById.has(exercise.exercise_id!)) {
-          return 'unbekannte exercise_id';
+          return 'unknown exercise_id';
         }
         if (exercise.is_unilateral_active) {
           const allowsUnilateral =
@@ -97,10 +97,10 @@ async function validatePlan(plan: PlanInput, userId: number): Promise<string | n
             method.timing_family === 'fixed-work-rest' ||
             (method.timing_family === 'self-paced' && method.scope === 'single');
           if (!allowsUnilateral) {
-            return 'einseitig geloggte Sätze sind beim Zirkel-Intervall nicht möglich';
+            return 'unilaterally logged sets are not possible with the circuit interval';
           }
           if (!isUnilateralById.get(exercise.exercise_id!)) {
-            return 'diese Übung kann nicht einseitig ausgeführt werden';
+            return 'this exercise cannot be done unilaterally';
           }
         }
       }
@@ -250,7 +250,7 @@ plansRouter.get('/:id', async (req, res) => {
   const planId = Number(req.params.id);
   const plan = await loadPlanDetail(planId, currentUser(req).id);
   if (!plan) {
-    res.status(404).json({ message: 'Plan nicht gefunden' });
+    res.status(404).json({ message: 'Plan not found' });
     return;
   }
   res.json(plan);
@@ -304,7 +304,7 @@ plansRouter.put('/:id', async (req, res) => {
     ]);
     if (updateResult.rowCount === 0) {
       await client.query('ROLLBACK');
-      res.status(404).json({ message: 'Plan nicht gefunden' });
+      res.status(404).json({ message: 'Plan not found' });
       return;
     }
     await client.query('DELETE FROM plan_days WHERE plan_id = $1', [planId]);
@@ -323,7 +323,7 @@ plansRouter.delete('/:id', async (req, res) => {
   const planId = Number(req.params.id);
   const result = await pool.query('DELETE FROM plans WHERE id = $1 AND user_id = $2', [planId, currentUser(req).id]);
   if (result.rowCount === 0) {
-    res.status(404).json({ message: 'Plan nicht gefunden' });
+    res.status(404).json({ message: 'Plan not found' });
     return;
   }
   res.status(204).send();

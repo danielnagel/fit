@@ -79,7 +79,7 @@ function MethodFields({ form, update }: FieldsProps) {
         Name <input className="field" value={form.name} onChange={(e) => update('name', e.target.value)} required />
       </label>
       <label className="flex items-center gap-2">
-        Umfang{' '}
+        Scope{' '}
         <select className="field" value={form.scope} onChange={(e) => update('scope', e.target.value as Scope)}>
           {(Object.keys(SCOPE_LABELS) as Scope[]).map((s) => (
             <option key={s} value={s}>
@@ -105,7 +105,7 @@ function MethodFields({ form, update }: FieldsProps) {
 
       {form.timing_family === 'fixed-window-remainder' && (
         <label className="flex items-center gap-2">
-          Fensterdauer je Runde{' '}
+          Window per round{' '}
           <DurationInput seconds={form.window_seconds} onChange={(v) => update('window_seconds', v)} />
         </label>
       )}
@@ -113,10 +113,10 @@ function MethodFields({ form, update }: FieldsProps) {
       {form.timing_family === 'fixed-work-rest' && (
         <>
           <label className="flex items-center gap-2">
-            Belastung je Runde <DurationInput seconds={form.work_seconds} onChange={(v) => update('work_seconds', v)} />
+            Work per round <DurationInput seconds={form.work_seconds} onChange={(v) => update('work_seconds', v)} />
           </label>
           <label className="flex items-center gap-2">
-            Pause je Runde <DurationInput seconds={form.rest_seconds} onChange={(v) => update('rest_seconds', v)} />
+            Rest per round <DurationInput seconds={form.rest_seconds} onChange={(v) => update('rest_seconds', v)} />
           </label>
         </>
       )}
@@ -124,7 +124,7 @@ function MethodFields({ form, update }: FieldsProps) {
       {form.timing_family === 'self-paced' && (
         <>
           <label className="flex items-center gap-2">
-            Pausenformel{' '}
+            Rest formula{' '}
             <select
               className="field"
               value={form.rest_formula}
@@ -139,7 +139,7 @@ function MethodFields({ form, update }: FieldsProps) {
           </label>
           {form.rest_formula === 'proportional' ? (
             <label className="flex items-center gap-2">
-              Faktor (× Satzdauer){' '}
+              Factor (× set duration){' '}
               <input
                 type="number"
                 min={0}
@@ -151,14 +151,14 @@ function MethodFields({ form, update }: FieldsProps) {
             </label>
           ) : (
             <label className="flex items-center gap-2">
-              Pause nach jedem Satz <DurationInput seconds={form.rest_seconds} onChange={(v) => update('rest_seconds', v)} />
+              Rest after each set <DurationInput seconds={form.rest_seconds} onChange={(v) => update('rest_seconds', v)} />
             </label>
           )}
         </>
       )}
 
       <label className="flex items-center gap-2">
-        Stopp-Bedingung{' '}
+        Stop condition{' '}
         <select
           className="field"
           value={form.stop_condition}
@@ -174,7 +174,7 @@ function MethodFields({ form, update }: FieldsProps) {
 
       {form.stop_condition === 'fixed-count' && (
         <label className="flex items-center gap-2">
-          Rundenzahl{' '}
+          Rounds{' '}
           <input
             type="number"
             min={1}
@@ -186,7 +186,7 @@ function MethodFields({ form, update }: FieldsProps) {
       )}
       {form.stop_condition === 'time-budget' && (
         <label className="flex items-center gap-2">
-          Zeitbudget{' '}
+          Time budget{' '}
           <DurationInput seconds={form.total_duration_seconds} onChange={(v) => update('total_duration_seconds', v)} />
         </label>
       )}
@@ -196,9 +196,9 @@ function MethodFields({ form, update }: FieldsProps) {
 
 export function describeMethod(m: TrainingMethod): string {
   const parts = [SCOPE_LABELS[m.scope], TIMING_FAMILY_LABELS[m.timing_family]];
-  if (m.stop_condition === 'fixed-count') parts.push(`${m.rounds} Runden`);
-  if (m.stop_condition === 'time-budget') parts.push(`Budget ${Math.round((m.total_duration_seconds ?? 0) / 60)} Min`);
-  if (m.stop_condition === 'all-exercises-done') parts.push('manuell beenden');
+  if (m.stop_condition === 'fixed-count') parts.push(`${m.rounds} rounds`);
+  if (m.stop_condition === 'time-budget') parts.push(`budget ${Math.round((m.total_duration_seconds ?? 0) / 60)} min`);
+  if (m.stop_condition === 'all-exercises-done') parts.push('finish manually');
   return parts.join(' · ');
 }
 
@@ -235,7 +235,7 @@ export default function TrainingMethods() {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     setForm(emptyForm());
@@ -257,7 +257,7 @@ export default function TrainingMethods() {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     setEditingId(null);
@@ -274,7 +274,7 @@ export default function TrainingMethods() {
     const res = await apiFetch(`/api/training-methods/${pendingDeleteId}`, { method: 'DELETE' });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      setError(body.message ?? `Fehler (${res.status})`);
+      setError(body.message ?? `Error (${res.status})`);
       return;
     }
     load();
@@ -282,13 +282,12 @@ export default function TrainingMethods() {
 
   return (
     <section className="card">
-      <h2 className="mb-2">Trainingsmethoden</h2>
+      <h2 className="mb-2">Training methods</h2>
       <p className="hint mb-4">
-        Der Katalog der Trainingsmethoden, aus dem beim Planen von Trainingstagen ausgewählt wird. Jede Methode legt
-        fest, wie viele Übungen zusammengehören, wie Belastung/Pause getaktet werden und wann eine Einheit beendet
-        ist.
+        The catalog of training methods to choose from when planning training days. Each method defines how many
+        exercises belong together, how work/rest are timed and when a unit is finished.
       </p>
-      {error && <p className="mb-3 text-sm text-danger">Fehler: {error}</p>}
+      {error && <p className="mb-3 text-sm text-danger">Error: {error}</p>}
       <ul className="mb-5 flex flex-col gap-2">
         {methods.map((m) =>
           editingId === m.id ? (
@@ -296,10 +295,10 @@ export default function TrainingMethods() {
               <MethodFields form={editForm} update={updateEditForm} />
               <div className="flex gap-2">
                 <button type="button" className="btn-primary" onClick={() => saveEdit(m.id)}>
-                  Speichern
+                  Save
                 </button>
                 <button type="button" className="btn" onClick={cancelEdit}>
-                  Abbrechen
+                  Cancel
                 </button>
               </div>
             </li>
@@ -308,10 +307,10 @@ export default function TrainingMethods() {
               <strong className="text-fg">{m.name}</strong> <span className="hint">— {describeMethod(m)}</span>
               <div className="ml-auto flex gap-2">
                 <button type="button" className="btn" onClick={() => startEdit(m)}>
-                  Bearbeiten
+                  Edit
                 </button>
                 <button type="button" className="btn-danger" onClick={() => requestDelete(m.id)}>
-                  Löschen
+                  Delete
                 </button>
               </div>
             </li>
@@ -319,15 +318,15 @@ export default function TrainingMethods() {
         )}
       </ul>
       <form className="panel-accent flex flex-col items-start gap-3" onSubmit={handleSubmit}>
-        <h3>Neue Methode</h3>
+        <h3>New method</h3>
         <MethodFields form={form} update={updateForm} />
         <button type="submit" className="btn-primary">
-          Hinzufügen
+          Add
         </button>
       </form>
       <ConfirmDialog
         ref={deleteDialogRef}
-        message="Methode wirklich löschen? Das schlägt fehl, solange sie noch in einem Plan verwendet wird."
+        message="Really delete this method? This fails as long as it is still used in a plan."
         onConfirm={handleDelete}
       />
     </section>

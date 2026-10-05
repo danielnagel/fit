@@ -30,7 +30,7 @@ exercisesRouter.get('/:id/progress', async (req, res) => {
 exercisesRouter.post('/', async (req, res) => {
   const { name, description, is_unilateral } = req.body ?? {};
   if (typeof name !== 'string' || !name.trim()) {
-    res.status(400).json({ message: 'name ist erforderlich' });
+    res.status(400).json({ message: 'name is required' });
     return;
   }
 
@@ -42,7 +42,7 @@ exercisesRouter.post('/', async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     if ((err as { code?: string }).code === '23505') {
-      res.status(409).json({ message: 'Übung existiert bereits' });
+      res.status(409).json({ message: 'Exercise already exists' });
       return;
     }
     res.status(500).json({ message: (err as Error).message });
@@ -53,7 +53,7 @@ exercisesRouter.put('/:id', async (req, res) => {
   const id = Number(req.params.id);
   const { name, description, is_unilateral } = req.body ?? {};
   if (typeof name !== 'string' || !name.trim()) {
-    res.status(400).json({ message: 'name ist erforderlich' });
+    res.status(400).json({ message: 'name is required' });
     return;
   }
 
@@ -63,13 +63,13 @@ exercisesRouter.put('/:id', async (req, res) => {
       [name.trim(), description || null, Boolean(is_unilateral), id, currentUser(req).id],
     );
     if (result.rows.length === 0) {
-      res.status(404).json({ message: 'Übung nicht gefunden' });
+      res.status(404).json({ message: 'Exercise not found' });
       return;
     }
     res.json(result.rows[0]);
   } catch (err) {
     if ((err as { code?: string }).code === '23505') {
-      res.status(409).json({ message: 'Übung existiert bereits' });
+      res.status(409).json({ message: 'Exercise already exists' });
       return;
     }
     res.status(500).json({ message: (err as Error).message });
@@ -82,13 +82,13 @@ exercisesRouter.delete('/:id', async (req, res) => {
   try {
     const result = await pool.query('DELETE FROM exercises WHERE id = $1 AND user_id = $2', [id, currentUser(req).id]);
     if (result.rowCount === 0) {
-      res.status(404).json({ message: 'Übung nicht gefunden' });
+      res.status(404).json({ message: 'Exercise not found' });
       return;
     }
     res.status(204).send();
   } catch (err) {
     if ((err as { code?: string }).code === '23503') {
-      res.status(409).json({ message: 'Übung wird noch in einem Trainingsplan verwendet' });
+      res.status(409).json({ message: 'Exercise is still used in a training plan' });
       return;
     }
     res.status(500).json({ message: (err as Error).message });

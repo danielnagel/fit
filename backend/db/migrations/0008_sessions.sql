@@ -1,5 +1,5 @@
--- Trainingsdurchfuehrung (M4). day_snapshot friert den Trainingstag zum Start-Zeitpunkt ein,
--- damit spaetere Plan-Bearbeitung (PUT ersetzt plan_days komplett) die Historie nicht veraendert/loescht.
+-- Running a training (M4). day_snapshot freezes the training day at start time so that
+-- later plan edits (PUT replaces plan_days entirely) don't change/delete the history.
 CREATE TABLE training_sessions (
   id SERIAL PRIMARY KEY,
   plan_id INTEGER NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
@@ -11,7 +11,7 @@ CREATE TABLE training_sessions (
   completed_at TIMESTAMPTZ
 );
 
--- unit_index ist pro Uebung skaliert: Runde (interval/superset/hiit), Stufe (ladder), Wiederholungs-Tick (circuit).
+-- unit_index is scaled per exercise: round (interval/superset/hiit), step (ladder), rep tick (circuit).
 CREATE TABLE logged_sets (
   id SERIAL PRIMARY KEY,
   training_session_id INTEGER NOT NULL REFERENCES training_sessions(id) ON DELETE CASCADE,

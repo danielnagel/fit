@@ -21,30 +21,30 @@ afterEach(() => {
 describe('Exercises', () => {
   it('loads and displays exercises', async () => {
     fetchMock.mockResolvedValueOnce(
-      jsonResponse([{ id: 1, name: 'Kniebeuge', description: 'tief', created_at: '2026-01-01' }]),
+      jsonResponse([{ id: 1, name: 'Squat', description: 'deep', created_at: '2026-01-01' }]),
     );
 
     render(<Exercises />);
 
-    expect(await screen.findByText('Kniebeuge')).toBeInTheDocument();
-    expect(screen.getByText('– tief')).toBeInTheDocument();
+    expect(await screen.findByText('Squat')).toBeInTheDocument();
+    expect(screen.getByText('– deep')).toBeInTheDocument();
   });
 
   it('adds a new exercise and reloads the list', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
     render(<Exercises />);
-    await screen.findByRole('button', { name: 'Hinzufügen' });
+    await screen.findByRole('button', { name: 'Add' });
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, name: 'Klimmzug', description: '' }, true, 201));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, name: 'Pull-up', description: '' }, true, 201));
     fetchMock.mockResolvedValueOnce(
-      jsonResponse([{ id: 1, name: 'Klimmzug', description: null, created_at: '2026-01-01' }]),
+      jsonResponse([{ id: 1, name: 'Pull-up', description: null, created_at: '2026-01-01' }]),
     );
 
-    await user.type(screen.getByPlaceholderText('Name'), 'Klimmzug');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.type(screen.getByPlaceholderText('Name'), 'Pull-up');
+    await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(await screen.findByText('Klimmzug')).toBeInTheDocument();
+    expect(await screen.findByText('Pull-up')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/exercises',
       expect.objectContaining({ method: 'POST' }),
@@ -55,24 +55,24 @@ describe('Exercises', () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
     render(<Exercises />);
-    await screen.findByRole('button', { name: 'Hinzufügen' });
+    await screen.findByRole('button', { name: 'Add' });
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, name: 'Einarmiges Rudern', is_unilateral: true }, true, 201));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, name: 'One-arm row', is_unilateral: true }, true, 201));
     fetchMock.mockResolvedValueOnce(
       jsonResponse([
-        { id: 1, name: 'Einarmiges Rudern', description: null, is_unilateral: true, created_at: '2026-01-01' },
+        { id: 1, name: 'One-arm row', description: null, is_unilateral: true, created_at: '2026-01-01' },
       ]),
     );
 
-    await user.type(screen.getByPlaceholderText('Name'), 'Einarmiges Rudern');
-    await user.click(screen.getByLabelText('kann einseitig ausgeführt werden'));
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.type(screen.getByPlaceholderText('Name'), 'One-arm row');
+    await user.click(screen.getByLabelText('can be done unilaterally'));
+    await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(await screen.findByText('Einarmiges Rudern')).toBeInTheDocument();
-    expect(screen.getByText('· einseitig')).toBeInTheDocument();
+    expect(await screen.findByText('One-arm row')).toBeInTheDocument();
+    expect(screen.getByText('· unilateral')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/exercises',
-      expect.objectContaining({ body: JSON.stringify({ name: 'Einarmiges Rudern', description: '', is_unilateral: true }) }),
+      expect.objectContaining({ body: JSON.stringify({ name: 'One-arm row', description: '', is_unilateral: true }) }),
     );
   });
 
@@ -80,55 +80,55 @@ describe('Exercises', () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
     render(<Exercises />);
-    await screen.findByRole('button', { name: 'Hinzufügen' });
+    await screen.findByRole('button', { name: 'Add' });
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Übung existiert bereits' }, false, 409));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'Exercise already exists' }, false, 409));
 
-    await user.type(screen.getByPlaceholderText('Name'), 'Duplikat');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.type(screen.getByPlaceholderText('Name'), 'Duplicate');
+    await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(await screen.findByText('Fehler: Übung existiert bereits')).toBeInTheDocument();
+    expect(await screen.findByText('Error: Exercise already exists')).toBeInTheDocument();
   });
 
   it('edits an exercise in place', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(
-      jsonResponse([{ id: 1, name: 'Alt', description: null, created_at: '2026-01-01' }]),
+      jsonResponse([{ id: 1, name: 'Old', description: null, created_at: '2026-01-01' }]),
     );
     render(<Exercises />);
-    await screen.findByText('Alt');
+    await screen.findByText('Old');
 
-    await user.click(screen.getByRole('button', { name: 'Bearbeiten' }));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
 
-    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, name: 'Neu', description: null }, true, 200));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 1, name: 'New', description: null }, true, 200));
     fetchMock.mockResolvedValueOnce(
-      jsonResponse([{ id: 1, name: 'Neu', description: null, created_at: '2026-01-01' }]),
+      jsonResponse([{ id: 1, name: 'New', description: null, created_at: '2026-01-01' }]),
     );
 
-    const nameInput = screen.getByDisplayValue('Alt');
+    const nameInput = screen.getByDisplayValue('Old');
     await user.clear(nameInput);
-    await user.type(nameInput, 'Neu');
-    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    await user.type(nameInput, 'New');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText('Neu')).toBeInTheDocument();
+    expect(await screen.findByText('New')).toBeInTheDocument();
   });
 
   it('deletes an exercise after confirming the dialog', async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValueOnce(
-      jsonResponse([{ id: 1, name: 'Zu löschen', description: null, created_at: '2026-01-01' }]),
+      jsonResponse([{ id: 1, name: 'To delete', description: null, created_at: '2026-01-01' }]),
     );
     render(<Exercises />);
-    const item = await screen.findByText('Zu löschen');
+    const item = await screen.findByText('To delete');
 
-    await user.click(within(item.closest('li')!).getByRole('button', { name: 'Löschen' }));
+    await user.click(within(item.closest('li')!).getByRole('button', { name: 'Delete' }));
 
     fetchMock.mockResolvedValueOnce({ ok: true, status: 204, json: async () => undefined } as Response);
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
 
-    const confirmButtons = screen.getAllByRole('button', { name: 'Löschen' });
+    const confirmButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
-    await waitFor(() => expect(screen.queryByText('Zu löschen')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('To delete')).not.toBeInTheDocument());
   });
 });

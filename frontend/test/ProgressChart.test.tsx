@@ -7,7 +7,7 @@ describe('ProgressChart', () => {
   it('shows a hint instead of a chart when there are no usable points', () => {
     render(<ProgressChart points={[]} />);
     expect(
-      screen.getByText('Noch keine abgeschlossenen Sätze mit Wiederholungen für diese Übung.'),
+      screen.getByText('No completed sets with reps for this exercise yet.'),
     ).toBeInTheDocument();
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
@@ -18,7 +18,7 @@ describe('ProgressChart', () => {
     ];
     render(<ProgressChart points={points} />);
     expect(
-      screen.getByText('Noch keine abgeschlossenen Sätze mit Wiederholungen für diese Übung.'),
+      screen.getByText('No completed sets with reps for this exercise yet.'),
     ).toBeInTheDocument();
   });
 
@@ -30,7 +30,7 @@ describe('ProgressChart', () => {
     ];
     render(<ProgressChart points={points} />);
 
-    const svg = screen.getByRole('img', { name: 'Fortschritt (beste Wiederholungszahl je Training)' });
+    const svg = screen.getByRole('img', { name: 'Progress (best rep count per training)' });
     expect(svg).toBeInTheDocument();
     expect(svg.querySelectorAll('circle')).toHaveLength(2);
   });
@@ -41,7 +41,7 @@ describe('ProgressChart', () => {
     ];
     render(<ProgressChart points={points} />);
 
-    const svg = screen.getByRole('img', { name: 'Fortschritt (beste Wiederholungszahl je Training)' });
+    const svg = screen.getByRole('img', { name: 'Progress (best rep count per training)' });
     expect(svg.querySelectorAll('circle')).toHaveLength(1);
   });
 });

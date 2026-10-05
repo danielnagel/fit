@@ -5,8 +5,8 @@ type Props = {
   count: number;
   onIncrement: () => void;
   onDecrement?: () => void;
-  // Graut den Zaehler-Button aus (statt Akzentfarbe), z.B. waehrend einer Pausenphase, in der er
-  // nicht der primaere Aktionspunkt ist -- dient nur der visuellen Phasenunterscheidung.
+  // Greys out the counter button (instead of the accent color), e.g. during a rest phase in which
+  // it isn't the primary action -- only serves to visually distinguish phases.
   muted?: boolean;
 };
 
