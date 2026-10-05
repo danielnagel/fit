@@ -24,7 +24,7 @@ async function expire(userId: number) {
 
 describe('GET /api/auth/config', () => {
   it('reports whether demo mode is active', async () => {
-    expect((await request(app).get('/api/auth/config')).body).toEqual({ demo: false, demo_ttl_minutes: 60 });
+    expect((await request(app).get('/api/auth/config')).body).toEqual({ demo: false, demo_ttl_minutes: 10 });
 
     vi.stubEnv('MODE', 'demo');
     expect((await request(app).get('/api/auth/config')).body.demo).toBe(true);
@@ -39,12 +39,12 @@ describe('POST /api/auth/demo', () => {
     expect((await pool.query('SELECT count(*)::int AS n FROM users')).rows[0].n).toBe(1);
   });
 
-  it('creates a logged-in demo user with example data and a one-hour cookie', async () => {
+  it('creates a logged-in demo user with example data and a ten-minute cookie', async () => {
     const { agent, res } = await startDemo();
 
     expect(res.status).toBe(201);
     expect(res.body.username).toMatch(/^demo-[0-9a-f]{6}$/);
-    expect(res.headers['set-cookie']?.[0]).toMatch(/Max-Age=3600/);
+    expect(res.headers['set-cookie']?.[0]).toMatch(/Max-Age=600/);
     expect((await agent.get('/api/auth/me')).body).toEqual(res.body);
 
     const plans = (await agent.get('/api/plans')).body;

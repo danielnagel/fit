@@ -13,8 +13,8 @@ export function isDemoMode() {
   return process.env.MODE === 'demo';
 }
 
-export const DEMO_TTL_MS = 60 * 60 * 1000;
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+export const DEMO_TTL_MS = 10 * 60 * 1000;
+const CLEANUP_INTERVAL_MS = 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Not a valid scrypt hash: passwords.verify() always returns false for it, so a password login is

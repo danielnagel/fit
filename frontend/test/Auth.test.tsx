@@ -134,10 +134,10 @@ describe('demo mode', () => {
     expect(screen.queryByRole('button', { name: 'Try the demo' })).not.toBeInTheDocument();
   });
 
-  it('starts a demo session from the login page', async () => {
+  it('shows only the demo entry on the login page and starts a demo session', async () => {
     const base = fetchMock.getMockImplementation()!;
     fetchMock.mockImplementation((url: string, init?: RequestInit) => {
-      if (url === '/api/auth/config') return Promise.resolve(jsonResponse({ demo: true, demo_ttl_minutes: 60 }));
+      if (url === '/api/auth/config') return Promise.resolve(jsonResponse({ demo: true, demo_ttl_minutes: 10 }));
       if (url === '/api/auth/demo') {
         loggedIn = true;
         return Promise.resolve(jsonResponse({ id: 7, username: 'demo-abc123' }, 201));
@@ -148,7 +148,9 @@ describe('demo mode', () => {
     window.history.pushState({}, '', '/plans');
     render(<App />);
 
-    expect(await screen.findByText(/after 60 minutes/)).toBeInTheDocument();
+    expect(await screen.findByText(/after 10 minutes/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Username')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Log in' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Try the demo' }));
 
     expect(await screen.findByRole('heading', { name: 'Training plans' })).toBeInTheDocument();

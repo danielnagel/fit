@@ -134,7 +134,7 @@ In a deployment, users are created via the CLI in the backend container as well 
 
 ### Demo mode
 
-With `MODE=demo` the login page additionally shows "Try the demo". Every click creates a separate user `demo-xxxxxx` with example data: the default training methods, six exercises, a plan with two training days, three completed weeks of history and a running week. Visitors don't see each other. Access expires after one hour; the backend deletes expired demo users including their data every five minutes. Each IP may create 20 demo accounts per hour. Use a separate instance with its own database for a public demo.
+With `MODE=demo` the login page only shows "Try the demo" instead of the login form (a demo instance has no regular accounts). Every click creates a separate user `demo-xxxxxx` with example data: the default training methods, six exercises, a plan with two training days, three completed weeks of history and a running week. Visitors don't see each other. Access expires after ten minutes; the backend deletes expired demo users including their data every minute. Each IP may create 20 demo accounts per hour. Use a separate instance with its own database for a public demo.
 
 ## Keeping dependencies up to date
 

@@ -4,7 +4,8 @@ import { useAuth } from './AuthContext';
 
 export default function Login() {
   const { login, startDemo } = useAuth();
-  const [demo, setDemo] = useState<{ ttlMinutes: number } | null>(null);
+  // null while /api/auth/config is loading, so the login form doesn't flash up on the demo instance.
+  const [config, setConfig] = useState<{ demo: boolean; ttlMinutes: number } | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -13,10 +14,8 @@ export default function Login() {
   useEffect(() => {
     fetch('/api/auth/config')
       .then((res) => (res.ok ? res.json() : null))
-      .then((config) => {
-        if (config?.demo) setDemo({ ttlMinutes: config.demo_ttl_minutes });
-      })
-      .catch(() => undefined);
+      .then((body) => setConfig({ demo: Boolean(body?.demo), ttlMinutes: body?.demo_ttl_minutes ?? 0 }))
+      .catch(() => setConfig({ demo: false, ttlMinutes: 0 }));
   }, []);
 
   const handleDemo = async () => {
@@ -50,46 +49,49 @@ export default function Login() {
           {error}
         </p>
       )}
-      {demo && (
-        <section className="card mb-4 flex flex-col gap-3">
+      {config?.demo && (
+        <section className="card flex flex-col gap-3">
           <h2>Demo</h2>
           <p className="hint">
             Try Fit with example data: a training plan, a few past trainings and a running week.
-            Your demo account and all changes are deleted after {demo.ttlMinutes} minutes.
+            Your demo account and all changes are deleted after {config.ttlMinutes} minutes.
           </p>
           <button type="button" className="btn-primary" onClick={handleDemo} disabled={submitting}>
             Try the demo
           </button>
         </section>
       )}
-      <form className="card flex flex-col gap-3" onSubmit={handleSubmit}>
-        <h2 className="mb-1">Log in</h2>
-        <label className="flex flex-col gap-1">
-          Username
-          <input
-            className="field"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            autoCapitalize="none"
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          Password
-          <input
-            className="field"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-          />
-        </label>
-        <button type="submit" className="btn-primary mt-2" disabled={submitting}>
-          {submitting ? 'Logging in …' : 'Log in'}
-        </button>
-      </form>
+      {/* The demo instance has no regular accounts, so only the demo entry is shown there. */}
+      {config && !config.demo && (
+        <form className="card flex flex-col gap-3" onSubmit={handleSubmit}>
+          <h2 className="mb-1">Log in</h2>
+          <label className="flex flex-col gap-1">
+            Username
+            <input
+              className="field"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              autoCapitalize="none"
+              required
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            Password
+            <input
+              className="field"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </label>
+          <button type="submit" className="btn-primary mt-2" disabled={submitting}>
+            {submitting ? 'Logging in …' : 'Log in'}
+          </button>
+        </form>
+      )}
     </main>
   );
 }
