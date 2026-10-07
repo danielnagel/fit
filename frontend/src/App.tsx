@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { AuthProvider, useAuth } from './AuthContext';
 import Login from './Login';
 import Nav from './Nav';
+import MadeBy from './MadeBy';
 import Exercises from './Exercises';
 import Plans from './Plans';
 import Training from './Training';
@@ -23,7 +24,7 @@ function ToLogin() {
 }
 
 function AppRoutes() {
-  const { state, logout } = useAuth();
+  const { state, config, logout } = useAuth();
 
   if (state.status === 'loading') return null;
 
@@ -49,6 +50,11 @@ function AppRoutes() {
           <Route path="/history" element={<History />} />
           <Route path="*" element={<Navigate to="/training" replace />} />
         </Routes>
+        {config?.demo && (
+          <footer className="mt-12">
+            <MadeBy />
+          </footer>
+        )}
       </main>
     </>
   );

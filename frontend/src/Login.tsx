@@ -1,22 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from './AuthContext';
+import MadeBy from './MadeBy';
 
 export default function Login() {
-  const { login, startDemo } = useAuth();
-  // null while /api/auth/config is loading, so the login form doesn't flash up on the demo instance.
-  const [config, setConfig] = useState<{ demo: boolean; ttlMinutes: number } | null>(null);
+  // config is null while loading, so the login form doesn't flash up on the demo instance.
+  const { config, login, startDemo } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/auth/config')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((body) => setConfig({ demo: Boolean(body?.demo), ttlMinutes: body?.demo_ttl_minutes ?? 0 }))
-      .catch(() => setConfig({ demo: false, ttlMinutes: 0 }));
-  }, []);
 
   const handleDemo = async () => {
     setError(null);
@@ -92,6 +85,7 @@ export default function Login() {
           </button>
         </form>
       )}
+      {config?.demo && <MadeBy className="mt-6" />}
     </main>
   );
 }

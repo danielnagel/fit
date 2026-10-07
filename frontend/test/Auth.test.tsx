@@ -132,6 +132,7 @@ describe('demo mode', () => {
 
     await screen.findByRole('heading', { name: 'Log in' });
     expect(screen.queryByRole('button', { name: 'Try the demo' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Made by Daniel' })).not.toBeInTheDocument();
   });
 
   it('shows only the demo entry on the login page and starts a demo session', async () => {
@@ -151,10 +152,12 @@ describe('demo mode', () => {
     expect(await screen.findByText(/after 10 minutes/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Username')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Log in' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Made by Daniel' })).toHaveAttribute('href', 'https://dnagel.de');
     await user.click(screen.getByRole('button', { name: 'Try the demo' }));
 
     expect(await screen.findByRole('heading', { name: 'Training plans' })).toBeInTheDocument();
     expect(screen.getByText('demo-abc123')).toBeInTheDocument();
+    expect(screen.getByRole('contentinfo')).toHaveTextContent('Made by Daniel');
     expect(fetchMock).toHaveBeenCalledWith('/api/auth/demo', { method: 'POST' });
   });
 });

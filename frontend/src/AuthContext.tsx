@@ -4,10 +4,14 @@ import { UNAUTHORIZED_EVENT } from './api';
 
 export type AuthUser = { id: number; username: string };
 
+// Instance settings from /api/auth/config; null while loading.
+export type AuthConfig = { demo: boolean; ttlMinutes: number };
+
 export type AuthState = { status: 'loading' } | { status: 'anonymous' } | { status: 'user'; user: AuthUser };
 
 type AuthContextValue = {
   state: AuthState;
+  config: AuthConfig | null;
   // Returns null on success, otherwise a displayable error message.
   login: (username: string, password: string) => Promise<string | null>;
   logout: () => Promise<void>;
@@ -19,6 +23,14 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' });
+  const [config, setConfig] = useState<AuthConfig | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setConfig({ demo: Boolean(body?.demo), ttlMinutes: body?.demo_ttl_minutes ?? 0 }))
+      .catch(() => setConfig({ demo: false, ttlMinutes: 0 }));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ status: 'anonymous' });
   }, []);
 
-  const value = useMemo(() => ({ state, login, logout, startDemo }), [state, login, logout, startDemo]);
+  const value = useMemo(
+    () => ({ state, config, login, logout, startDemo }),
+    [state, config, login, logout, startDemo],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
