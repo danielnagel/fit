@@ -2,7 +2,7 @@
 # see build.context/build.dockerfile in docker-compose.yml.
 
 # ---- Build stage ---------------------------------------------------------
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ FROM build AS dev
 CMD ["npm", "run", "dev"]
 
 # ---- Runtime stage (default target, pushed to GHCR by CI) ----------------
-FROM node:24-alpine
+FROM node:26-alpine
 
 WORKDIR /app
 
