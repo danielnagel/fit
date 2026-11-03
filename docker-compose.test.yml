@@ -2,7 +2,7 @@ name: fit-test
 
 services:
   fit-db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: fit_test
       POSTGRES_USER: fit_test
